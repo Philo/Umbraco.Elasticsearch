@@ -19,7 +19,7 @@ var testAssemblies          = new [] {
                             };
 
 var artifacts               = MakeAbsolute(Directory(Argument("artifactPath", "./artifacts")));
-var buildOutput             = MakeAbsolute(Directory(artifacts +"/build"));
+var buildOutput             = MakeAbsolute(Directory(artifacts +"/build/"));
 var testResultsPath         = MakeAbsolute(Directory(artifacts + "./test-results"));
 var versionAssemblyInfo     = MakeAbsolute(File(Argument("versionAssemblyInfo", "VersionAssemblyInfo.cs")));
 
@@ -131,7 +131,7 @@ Task("Package")
                                  NoPackageAnalysis       = true,
                                  Properties              = new Dictionary<string, string> { { "Configuration", configuration }},
                                  Files                   = new [] {
-                                                                      new NuSpecContent {Source = buildOutput + "Umbraco.Elasticsearch.dll", Target = "bin"},
+                                                                      new NuSpecContent {Source = buildOutput + "/Umbraco.Elasticsearch.dll", Target = "lib/net45"},
                                                                    },
                                  BasePath                = buildOutput,
                                  OutputDirectory         = artifacts
