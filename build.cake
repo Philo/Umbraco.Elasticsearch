@@ -7,6 +7,8 @@
 var target                  = Argument("target", "Default");
 var configuration           = Argument("configuration", "Release");
 var solutionPath            = MakeAbsolute(File(Argument("solutionPath", "./Umbraco.Elasticsearch.sln")));
+var nugetProject            = Argument("nugetProject", "Umbraco.Elasticsearch");
+
 
 //////////////////////////////////////////////////////////////////////
 // PREPARATION
@@ -17,10 +19,11 @@ var testAssemblies          = new [] {
                             };
 
 var artifacts               = MakeAbsolute(Directory(Argument("artifactPath", "./artifacts")));
+var buildOutput             = MakeAbsolute(Directory(artifacts +"/build"));
 var testResultsPath         = MakeAbsolute(Directory(artifacts + "./test-results"));
 var versionAssemblyInfo     = MakeAbsolute(File(Argument("versionAssemblyInfo", "VersionAssemblyInfo.cs")));
 
-FilePath webProjectPath              = null;
+FilePath nugetProjectPath            = null;
 SolutionParserResult solution        = null;
 GitVersion versionInfo               = null;
 
@@ -32,7 +35,15 @@ Setup(() => {
     CreateDirectory(artifacts);
     
     if(!FileExists(solutionPath)) throw new Exception(string.Format("Solution file not found - {0}", solutionPath.ToString()));
-    solution = ParseSolution(solutionPath.ToString());    
+    solution = ParseSolution(solutionPath.ToString());
+
+    var project = solution.Projects.FirstOrDefault(x => x.Name == nugetProject);
+    if(project == null) throw new Exception(string.Format("Unable to find project '{0}' in solution '{1}'", nugetProject, solutionPath.GetFilenameWithoutExtension()));
+    nugetProjectPath = project.Path;
+    
+    if(!FileExists(nugetProjectPath)) throw new Exception("project path not found");
+    Information("[Setup] Using Solution '{0}' with project '{1}'", solutionPath.ToString(), project.Name);    
+        
 });
 
 Task("Clean")
@@ -90,10 +101,52 @@ Task("Build")
         .WithProperty("TreatWarningsAsErrors","true")
         .WithProperty("UseSharedCompilation", "false")
         .WithProperty("AutoParameterizationWebConfigConnectionStrings", "false")
+        .WithProperty("OutputPath", buildOutput.ToString())
         .SetVerbosity(Verbosity.Quiet)
         .SetConfiguration(configuration)
         .WithTarget("Rebuild")
     );
+});
+
+Task("Package")
+    .IsDependentOn("Build")
+    .Does(() => 
+{
+    var nuGetPackSettings   = new NuGetPackSettings {
+                                 Id                      = "Umbraco.Elasticsearch",
+                                 Version                 = versionInfo.NuGetVersionV2,
+                                 Title                   = "Umbraco.Elasticsearch",
+                                 Authors                 = new[] {"Phil Oyston"},
+                                 Owners                  = new[] {"Phil Oyston"},
+                                 Description             = "Integration of Elasticsearch into Umbraco for front end search",
+                                 Summary                 = "Integration of Elasticsearch into Umbraco for front end search",
+                                 //ProjectUrl              = new Uri("https:github.com/SomeUser/TestNuget/"),
+                                 //IconUrl                 = new Uri("http:cdn.rawgit.com/SomeUser/TestNuget/master/icons/testnuget.png"),
+                                 //LicenseUrl              = new Uri("https:github.com/SomeUser/TestNuget/blob/master/LICENSE.md"),
+                                 Copyright               = "2016",
+                                 // ReleaseNotes            = new [] {"Bug fixes", "Issue fixes", "Typos"},
+                                 // Tags                    = new [] {"Cake", "Script", "Build"},
+                                 RequireLicenseAcceptance= false,
+                                 Symbols                 = true,
+                                 NoPackageAnalysis       = true,
+                                 Properties              = new Dictionary<string, string> { { "Configuration", configuration }},
+                                 Files                   = new [] {
+                                                                      new NuSpecContent {Source = buildOutput + "Umbraco.Elasticsearch.dll", Target = "bin"},
+                                                                   },
+                                 BasePath                = buildOutput,
+                                 OutputDirectory         = artifacts
+                             };
+                             
+    NuGetPack(nugetProject +".nuspec", nuGetPackSettings);                             
+    /*
+    NuGetPack(nugetProjectPath, new NuGetPackSettings {
+        Properties = new Dictionary<string, string>() {
+            { "Configuration", configuration }
+        },
+        Symbols = true,
+        NoPackageAnalysis = true,
+        OutputDirectory = artifacts
+    }); */
 });
 
 /*
@@ -129,6 +182,7 @@ Task("Default")
     .IsDependentOn("Update-Version-Info")
     .IsDependentOn("Update-AppVeyor-Build-Number")
     .IsDependentOn("Build")
+    .IsDependentOn("Package")
     ;
 
 //////////////////////////////////////////////////////////////////////
