@@ -124,7 +124,7 @@ Task("Package")
                                  //LicenseUrl              = new Uri("https://raw.githubusercontent.com/Philo/Umbraco.Elasticsearch/master/LICENSE"),
                                  Copyright               = "2016",
                                  // ReleaseNotes            = new [] {"Bug fixes", "Issue fixes", "Typos"},
-                                 // Tags                    = new [] {"Cake", "Script", "Build"},
+                                 Tags                    = new [] {"Elasticsearch", "Umbraco", "Nest"},
                                  RequireLicenseAcceptance= false,
                                  Symbols                 = true,
                                  NoPackageAnalysis       = true,
@@ -133,24 +133,17 @@ Task("Package")
                                                                       new NuSpecContent {Source = buildOutput + "/Umbraco.Elasticsearch.dll", Target = "lib/net45"},
                                                                       new NuSpecContent {Source = buildOutput + "/Umbraco.Elasticsearch.pdb", Target = "lib/net45"},
                                                                       new NuSpecContent {Source = buildOutput + "/App_Plugins/**/*", Target = "content"},
-                                                                   },
+                                                                   }, 
                                  BasePath                = buildOutput,
                                  OutputDirectory         = artifacts
                              };
                              
     NuGetPack(nugetProject +".nuspec", nuGetPackSettings);                             
-    /*
-    NuGetPack(nugetProjectPath, new NuGetPackSettings {
-        Properties = new Dictionary<string, string>() {
-            { "Configuration", configuration }
-        },
-        Symbols = true,
-        NoPackageAnalysis = true,
-        OutputDirectory = artifacts
-    }); */
 });
 
 /*
+ * TODO : erm, unit tests
+ *
 Task("Run-Unit-Tests")
     .IsDependentOn("Build")
     .Does(() =>
