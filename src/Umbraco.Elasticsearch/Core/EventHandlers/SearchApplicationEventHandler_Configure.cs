@@ -23,7 +23,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
 
             UmbracoSearchFactory.SetDefaultClient(client);
             UmbracoSearchFactory.SetDefaultRepository(repository);
-            UmbracoSearchFactory.RegisterIndexStrategy(GetIndexCreationStrategy());
+            UmbracoSearchFactory.RegisterIndexStrategy(GetIndexCreationStrategy(client));
         }
 
         protected abstract IElasticClient ConfigureElasticClient();
@@ -33,6 +33,6 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             return new ElasticsearchRepository(client);
         }
 
-        protected abstract IElasticsearchIndexCreationStrategy GetIndexCreationStrategy();
+        protected abstract IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client);
     }
 }
