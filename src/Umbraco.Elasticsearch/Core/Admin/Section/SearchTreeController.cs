@@ -9,11 +9,12 @@ using Umbraco.Web.Trees;
 
 namespace Umbraco.Elasticsearch.Core.Admin.Section
 {
+    /*
     [Application("searchSection", "searchSection", "icon-search", 15)]
-    public class SearchApplication : IApplication { }
+    public class SearchApplication : IApplication { } */
 
     [PluginController("searchSection")]
-    [Web.Trees.Tree("searchSection", "searchSectionTree", "Search Section Tree")]
+    [Web.Trees.Tree("searchSection", "searchSectionTree", "Search")]
     public class SearchTreeController : TreeController
     {
         protected override TreeNodeCollection GetTreeNodes(string id, FormDataCollection queryStrings)
@@ -36,15 +37,7 @@ namespace Umbraco.Elasticsearch.Core.Admin.Section
 
         protected override MenuItemCollection GetMenuForNode(string id, FormDataCollection queryStrings)
         {
-            
-            var menu = new MenuItemCollection();
-            menu.DefaultMenuAlias = ActionBrowse.Instance.Alias;
-            return menu;
-            /*
-            var menu = new MenuItemCollection();
-            menu.DefaultMenuAlias = ActionNew.Instance.Alias;
-            menu.Items.Add<ActionNew>("Create");
-            return menu; */
+            return null;
         }
     }
 }
