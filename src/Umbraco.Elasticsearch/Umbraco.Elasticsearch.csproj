@@ -21,7 +21,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\Umbraco.Elasticsearch.XML</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -301,7 +302,9 @@
     <Compile Include="Core\Admin\Api\SearchApiController.cs" />
     <Compile Include="Core\Admin\Section\SearchSection.cs" />
     <Compile Include="Core\Config\ConfigurationManagerUtils.cs" />
+    <Compile Include="Core\Config\DefaultIndexNameResolver.cs" />
     <Compile Include="Core\Config\FromConfigSearchSettings.cs" />
+    <Compile Include="Core\Config\ISearchIndexNameResolver.cs" />
     <Compile Include="Core\Config\ISearchSettings.cs" />
     <Compile Include="Core\Config\SearchSettings.cs" />
     <Compile Include="Core\Content\ContentDocument.cs" />
