@@ -60,8 +60,7 @@ Task("Restore-NuGet-Packages")
     .IsDependentOn("Clean")
     .Does(() =>
 {
-    NuGetRestore(solutionPath, new NuGetRestoreSettings {
-    });
+    NuGetRestore(solutionPath, new NuGetRestoreSettings());
 });
 
 Task("Update-Version-Info")
@@ -120,9 +119,9 @@ Task("Package")
                                  Owners                  = new[] {"Phil Oyston"},
                                  Description             = "Integration of Elasticsearch into Umbraco for front end search",
                                  Summary                 = "Integration of Elasticsearch into Umbraco for front end search",
-                                 //ProjectUrl              = new Uri("https:github.com/SomeUser/TestNuget/"),
+                                 //ProjectUrl              = new Uri("https://github.com/Philo/Umbraco.Elasticsearch"),
                                  //IconUrl                 = new Uri("http:cdn.rawgit.com/SomeUser/TestNuget/master/icons/testnuget.png"),
-                                 //LicenseUrl              = new Uri("https:github.com/SomeUser/TestNuget/blob/master/LICENSE.md"),
+                                 //LicenseUrl              = new Uri("https://raw.githubusercontent.com/Philo/Umbraco.Elasticsearch/master/LICENSE"),
                                  Copyright               = "2016",
                                  // ReleaseNotes            = new [] {"Bug fixes", "Issue fixes", "Typos"},
                                  // Tags                    = new [] {"Cake", "Script", "Build"},
@@ -132,6 +131,8 @@ Task("Package")
                                  Properties              = new Dictionary<string, string> { { "Configuration", configuration }},
                                  Files                   = new [] {
                                                                       new NuSpecContent {Source = buildOutput + "/Umbraco.Elasticsearch.dll", Target = "lib/net45"},
+                                                                      new NuSpecContent {Source = buildOutput + "/Umbraco.Elasticsearch.pdb", Target = "lib/net45"},
+                                                                      new NuSpecContent {Source = buildOutput + "/App_Plugins/**/*", Target = "content"},
                                                                    },
                                  BasePath                = buildOutput,
                                  OutputDirectory         = artifacts

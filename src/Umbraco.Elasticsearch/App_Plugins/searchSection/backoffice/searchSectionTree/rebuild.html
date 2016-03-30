@@ -1,0 +1,81 @@
+﻿<script>
+
+    function customController($scope, $routeParams, notificationsService, searchResource) {
+        console.log($routeParams);
+        $scope.stats = null;
+
+        $scope.status = '';
+
+        function getStats() {
+            return searchResource.getStats().then(function (data) {
+                return data.data;
+            });
+        }
+
+        function rebuildContentIndex() {
+            $scope.stats = null;
+            notificationsService.success('Rebuilding Content Index', 'Content Index rebuild has started');
+            searchResource.rebuildContentIndex().then(function () {
+                getStats().then(function(stats) {
+                    notificationsService.success("Content Index Rebuild", "Content Index rebuild completed (docs: " + stats.docCount + ")");
+                });
+            }, function() {
+                notificationsService.error("Content Index Rebuild", "Content Index Rebuild Failed");
+                setTimeout(getStats, 2000);
+            });
+        }
+
+        function rebuildMediaIndex() {
+            $scope.stats = null;
+            notificationsService.success('Rebuilding Media Index', 'Media Index rebuild has started');
+            searchResource.rebuildMediaIndex().then(function () {
+                getStats().then(function (stats) {
+                    notificationsService.success("Media Index Rebuild", "Index rebuild completed (docs: " + stats.docCount + ")");
+                });
+            }, function () {
+                notificationsService.error("Media Index Rebuild", "Media Index Rebuild Failed");
+                setTimeout(getStats, 2000);
+            });
+        }
+
+        $scope.getStats = function() {
+            getStats().then(function(stats) {
+                $scope.stats = stats;
+            });
+        };
+
+        $scope.rebuildContentIndex = rebuildContentIndex;
+        $scope.rebuildMediaIndex = rebuildMediaIndex;
+
+        $scope.getStats();
+    }
+</script>
+
+<div ng-controller="customController">
+    <umb-panel>
+        <umb-header>
+            <h1>Manage Search</h1>
+        </umb-header>
+
+        <div class="umb-panel-body umb-scrollable row-fluid">
+            <div class="tab-content form-horizontal" style="padding-bottom: 90px">
+                <div class="umb-pane">
+                    <button data-ng-click="rebuildContentIndex()">Rebuild Content Index</button>
+                </div>
+
+                <div class="umb-pane">
+                    <button data-ng-click="rebuildMediaIndex()">Rebuild Media Index</button>
+                </div>
+
+                <div class="umb-pane">
+                    <table>
+                        <tr ng-repeat="(name, stat) in stats track by $index">
+                            <th ng-bind="name"></th>
+                            <td ng-bind="stat"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </umb-panel>
+</div>
