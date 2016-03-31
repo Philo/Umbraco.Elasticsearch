@@ -1,0 +1,43 @@
+﻿<script>
+
+    function customController($scope, $routeParams, notificationsService, searchResource) {
+        $scope.stats = null;
+
+        $scope.status = '';
+
+        function getStats() {
+            return searchResource.getStats().then(function (data) {
+                return data.data;
+            });
+        }
+
+        $scope.getStats = function() {
+            getStats().then(function(stats) {
+                $scope.stats = stats;
+            });
+        };
+
+        $scope.getStats();
+    }
+</script>
+
+<div ng-controller="customController">
+    <umb-panel>
+        <umb-header>
+            <h1>Manage Search</h1>
+        </umb-header>
+
+        <div class="umb-panel-body umb-scrollable row-fluid">
+            <div class="tab-content form-horizontal" style="padding-bottom: 90px">
+                <div class="umb-pane">
+                    <table>
+                        <tr ng-repeat="(name, stat) in stats track by $index">
+                            <th ng-bind="name"></th>
+                            <td ng-bind="stat"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </umb-panel>
+</div>

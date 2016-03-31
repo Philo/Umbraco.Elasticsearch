@@ -15,6 +15,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         {
             try
             {
+                if(string.IsNullOrWhiteSpace(searchSettings.IndexName)) throw new ArgumentNullException(nameof(searchSettings.IndexName), "No indexName configured.  Ensure you have set am index name via ISearchSettings");
                 var client = ConfigureElasticClient(searchSettings);
                 var repository = ConfigureElasticsearchRepository(client);
 

@@ -14,6 +14,13 @@ using Umbraco.Web.Cache;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
+    public abstract class SearchApplicationEventHandler : SearchApplicationEventHandler<FromConfigSearchSettings>
+    {
+        protected SearchApplicationEventHandler() : base(new FromConfigSearchSettings())
+        {
+        }
+    }
+
     public abstract partial class SearchApplicationEventHandler<TSearchSettings> : ApplicationEventHandler
         where TSearchSettings : ISearchSettings
     {
