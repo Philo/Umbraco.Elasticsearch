@@ -334,27 +334,16 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <Content Include="App_Plugins\searchSection\package.manifest">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Include="App_Plugins\searchSection\package.manifest" />
     <None Include="packages.config" />
+    <None Include="Umbraco.Elasticsearch.nuspec" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Plugins\searchSection\backoffice\searchSectionTree\delete.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="App_Plugins\searchSection\backoffice\searchSectionTree\info.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="App_Plugins\searchSection\backoffice\searchSectionTree\manage.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="App_Plugins\searchSection\backoffice\searchSectionTree\rebuild.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="App_Plugins\searchSection\search.resource.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\delete.html" />
+    <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\info.html" />
+    <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\manage.html" />
+    <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\rebuild.html" />
+    <None Include="App_Plugins\searchSection\search.resource.js" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />

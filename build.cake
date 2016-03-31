@@ -100,7 +100,6 @@ Task("Build")
         .WithProperty("TreatWarningsAsErrors","true")
         .WithProperty("UseSharedCompilation", "false")
         .WithProperty("AutoParameterizationWebConfigConnectionStrings", "false")
-        .WithProperty("OutputPath", buildOutput.ToString())
         .SetVerbosity(Verbosity.Quiet)
         .SetConfiguration(configuration)
         .WithTarget("Rebuild")
@@ -111,34 +110,12 @@ Task("Package")
     .IsDependentOn("Build")
     .Does(() => 
 {
-    var nuGetPackSettings   = new NuGetPackSettings {
-                                 Id                      = "Umbraco.Elasticsearch",
-                                 Version                 = versionInfo.NuGetVersionV2,
-                                 Title                   = "Umbraco.Elasticsearch",
-                                 Authors                 = new[] {"Phil Oyston"},
-                                 Owners                  = new[] {"Phil Oyston", "Storm ID"},
-                                 Description             = "Integration of Elasticsearch into Umbraco for front end search",
-                                 Summary                 = "Integration of Elasticsearch into Umbraco for front end search",
-                                 ProjectUrl              = new Uri("https://github.com/Philo/Umbraco.Elasticsearch"),
-                                 //IconUrl                 = new Uri("http:cdn.rawgit.com/SomeUser/TestNuget/master/icons/testnuget.png"),
-                                 LicenseUrl              = new Uri("https://raw.githubusercontent.com/Philo/Umbraco.Elasticsearch/master/LICENSE"),
-                                 Copyright               = "2016",
-                                 // ReleaseNotes            = new [] {"Bug fixes", "Issue fixes", "Typos"},
-                                 Tags                    = new [] {"Elasticsearch", "Umbraco", "Nest"},
-                                 RequireLicenseAcceptance= false,
-                                 Symbols                 = true,
-                                 NoPackageAnalysis       = true,
-                                 Properties              = new Dictionary<string, string> { { "Configuration", configuration }},
-                                 Files                   = new [] {
-                                                                      new NuSpecContent {Source = buildOutput + "/Umbraco.Elasticsearch.dll", Target = "lib/net45"},
-                                                                      new NuSpecContent {Source = buildOutput + "/Umbraco.Elasticsearch.pdb", Target = "lib/net45"},
-                                                                      new NuSpecContent {Source = buildOutput + "/App_Plugins/**/*", Target = "content"},
-                                                                   }, 
-                                 BasePath                = buildOutput,
-                                 OutputDirectory         = artifacts
-                             };
-                             
-    NuGetPack(nugetProject +".nuspec", nuGetPackSettings);                             
+    NuGetPack(nugetProjectPath, new NuGetPackSettings {
+        Properties = new Dictionary<string, string> { { "Configuration", configuration }},
+        Symbols = true,
+        NoPackageAnalysis = true,
+        OutputDirectory = artifacts
+    });                     
 });
 
 /*
