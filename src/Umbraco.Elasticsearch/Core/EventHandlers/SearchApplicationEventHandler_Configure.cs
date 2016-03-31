@@ -11,7 +11,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
     public abstract partial class SearchApplicationEventHandler<TSearchSettings>
         where TSearchSettings : ISearchSettings
     {
-        public void Initialise(ISearchSettings searchSettings)
+        public void Initialise(TSearchSettings searchSettings)
         {
             try
             {
@@ -28,7 +28,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             }
         }
 
-        protected abstract IElasticClient ConfigureElasticClient(ISearchSettings searchSettings);
+        protected abstract IElasticClient ConfigureElasticClient(TSearchSettings searchSettings);
 
         protected virtual IElasticsearchRepository ConfigureElasticsearchRepository(IElasticClient client)
         {
