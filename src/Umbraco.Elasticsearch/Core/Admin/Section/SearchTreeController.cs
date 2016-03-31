@@ -17,10 +17,10 @@ namespace Umbraco.Elasticsearch.Core.Admin.Section
         protected override TreeNodeCollection GetTreeNodes(string id, FormDataCollection queryStrings)
         {
             var nodes = new TreeNodeCollection();
-            if (UmbracoSearchFactory.IsSearchAvailable())
+            var client = UmbracoSearchFactory.Client;
+            var indexName = client?.Infer?.DefaultIndex;
+            if (!string.IsNullOrWhiteSpace(indexName))
             {
-                var client = UmbracoSearchFactory.Client;
-                var indexName = client.Infer.DefaultIndex;
                 if (id == Constants.System.Root.ToInvariantString())
                 {
                     nodes.Add(CreateTreeNode("manage", id, queryStrings, indexName, "icon-ordered-list", true,
