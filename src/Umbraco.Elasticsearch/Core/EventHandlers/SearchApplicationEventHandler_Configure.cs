@@ -1,32 +1,34 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using Nest;
 using Nest.Indexify;
 using Nest.Queryify;
 using Nest.Queryify.Abstractions;
-using Umbraco.Elasticsearch.Core.Media;
+using Umbraco.Core.Logging;
+using Umbraco.Elasticsearch.Core.Config;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
-    public abstract partial class SearchApplicationEventHandler
+    public abstract partial class SearchApplicationEventHandler<TSearchSettings>
+        where TSearchSettings : ISearchSettings
     {
-
-        protected virtual IEnumerable<IMediaIndexService> RegisterMediaIndexingServices()
+        public void Initialise(ISearchSettings searchSettings)
         {
-            return Enumerable.Empty<IMediaIndexService>();
+            try
+            {
+                var client = ConfigureElasticClient(searchSettings);
+                var repository = ConfigureElasticsearchRepository(client);
+
+                UmbracoSearchFactory.SetDefaultClient(client);
+                UmbracoSearchFactory.SetDefaultRepository(repository);
+                UmbracoSearchFactory.RegisterIndexStrategy(GetIndexCreationStrategy(client));
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error<SearchApplicationEventHandler<TSearchSettings>>("Unable to initialise elasticsearch integration", ex);
+            }
         }
 
-        public void Initialise()
-        {
-            var client = ConfigureElasticClient();
-            var repository = ConfigureElasticsearchRepository(client);
-
-            UmbracoSearchFactory.SetDefaultClient(client);
-            UmbracoSearchFactory.SetDefaultRepository(repository);
-            UmbracoSearchFactory.RegisterIndexStrategy(GetIndexCreationStrategy(client));
-        }
-
-        protected abstract IElasticClient ConfigureElasticClient();
+        protected abstract IElasticClient ConfigureElasticClient(ISearchSettings searchSettings);
 
         protected virtual IElasticsearchRepository ConfigureElasticsearchRepository(IElasticClient client)
         {

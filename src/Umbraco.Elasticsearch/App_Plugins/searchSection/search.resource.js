@@ -15,9 +15,6 @@
             },
             createIndex: function () {
                 return $http.post("backoffice/searchSection/searchApi/createindex");
-            }/*,
-            refreshType: function (type) {
-                return $http.post("backoffice/searchSection/searchApi/refreshtype?type=" +type);
-            } */
+            }
         };
     });

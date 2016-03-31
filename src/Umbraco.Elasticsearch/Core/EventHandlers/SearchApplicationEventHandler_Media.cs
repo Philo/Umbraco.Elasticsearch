@@ -1,16 +1,27 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
+using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Media;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
-    public abstract partial class SearchApplicationEventHandler
+    public abstract partial class SearchApplicationEventHandler<TSearchSettings>
+        where TSearchSettings : ISearchSettings
     {
+        /// <summary>
+        /// Override me to register media index services
+        /// </summary>
+        /// <returns></returns>
+        protected virtual IEnumerable<IMediaIndexService> RegisterMediaIndexingServices()
+        {
+            return Enumerable.Empty<IMediaIndexService>();
+        }
 
         /// <summary>
-        /// Override me to alter the indexing process for invidual content items
+        /// Override me to alter the indexing process for individual content items
         /// </summary>
         /// <param name="indexService">the index service applicable to the <param name="item">media</param></param>
         /// <param name="item">media item</param>
@@ -40,13 +51,13 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                     {
                         RemoveMedia(indexService, item);
                         messages?.Add(new EventMessage("Search", "Media removed from search index", EventMessageType.Success));
-                        LogHelper.Debug<SearchApplicationEventHandler>(() => $"Media ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
+                        LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Media ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
                     }
                     else
                     {
                         IndexMedia(indexService, item);
                         messages?.Add(new EventMessage("Search", "Media added to search index", EventMessageType.Success));
-                        LogHelper.Debug<SearchApplicationEventHandler>(() => $"Media ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been indexed");
+                        LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Media ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been indexed");
                     }
                 }
             }
@@ -61,7 +72,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                 {
                     RemoveMedia(indexService, item);
                     messages?.Add(new EventMessage("Search", "Removed media from search index", EventMessageType.Success));
-                    LogHelper.Debug<SearchApplicationEventHandler>(() => $"Media ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
+                    LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Media ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
                 }
             }
         }

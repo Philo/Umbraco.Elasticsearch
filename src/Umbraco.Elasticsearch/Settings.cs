@@ -4,18 +4,21 @@ namespace Umbraco.Elasticsearch
 {
     public class Settings
     {
+        private static short DefaultInterval = 20;
+
         public static short AvailbilityRefreshIntervalMinutes
         {
             get
             {
-                var value = "AvailabilityRefreshIntervalMinutes".FromAppSettingsWithPrefix("Elastic", "20");
+                var value = nameof(AvailbilityRefreshIntervalMinutes).FromAppSettingsWithPrefix("Umbraco.Elasticsearch:", "20");
                 short interval;
-                if (!short.TryParse(value, out interval))
+                if (short.TryParse(value, out interval))
                 {
-                    interval = 20;
+                    interval = interval <= 0 ? DefaultInterval : interval;
+                    return interval;
                 }
 
-                return interval;
+                return DefaultInterval;
             }
         }
     }

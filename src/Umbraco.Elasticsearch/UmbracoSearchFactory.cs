@@ -93,7 +93,7 @@ namespace Umbraco.Elasticsearch
         {
             get
             {
-                if (_repository == null) throw new ConfigurationErrorsException("Elasticsearch repository is not available, verify configuration settings");
+                if (_client == null) throw new ConfigurationErrorsException("Elasticsearch client is not available, verify configuration settings");
                 return _client;
             }
         }

@@ -4,11 +4,13 @@ using System.Linq;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
+using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
-    public abstract partial class SearchApplicationEventHandler
+    public abstract partial class SearchApplicationEventHandler<TSearchSettings>
+        where TSearchSettings : ISearchSettings
     {
         protected virtual IEnumerable<IContentIndexService> RegisterContentIndexingServices()
         {
@@ -47,19 +49,19 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                         {
                             RemoveContent(indexService, item);
                             messages?.Add(new EventMessage("Search", "Content removed from search index", EventMessageType.Success));
-                            LogHelper.Debug<SearchApplicationEventHandler>(() => $"Content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
+                            LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
                         }
                         else
                         {
                             IndexContent(indexService, item);
                             messages?.Add(new EventMessage("Search", "Content added to search index", EventMessageType.Success));
-                            LogHelper.Debug<SearchApplicationEventHandler>(() => $"Content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been indexed");
+                            LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been indexed");
                         }
                     }
                     catch (Exception ex)
                     {
                         messages?.Add(new EventMessage("Search", $"Unable to index content : '{item.Name}' => {ex.Message}", EventMessageType.Error));
-                        LogHelper.WarnWithException<SearchApplicationEventHandler>($"Unable to index content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}'", ex);
+                        LogHelper.WarnWithException<SearchApplicationEventHandler<TSearchSettings>>($"Unable to index content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}'", ex);
                     }
                 }
             }
@@ -76,13 +78,13 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                     {
                         RemoveContent(indexService, item);
                         messages?.Add(new EventMessage("Search", "Removed content from search index", EventMessageType.Success));
-                        LogHelper.Debug<SearchApplicationEventHandler>(() => $"Content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
+                        LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
                     }
                 }
                 catch (Exception ex)
                 {
                     messages?.Add(new EventMessage("Search", $"Unable to remove content : '{item.Name}' => {ex.Message}", EventMessageType.Error));
-                    LogHelper.WarnWithException<SearchApplicationEventHandler>($"Unable to remove content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' from search index", ex);
+                    LogHelper.WarnWithException<SearchApplicationEventHandler<TSearchSettings>>($"Unable to remove content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' from search index", ex);
                 }
             }
         }

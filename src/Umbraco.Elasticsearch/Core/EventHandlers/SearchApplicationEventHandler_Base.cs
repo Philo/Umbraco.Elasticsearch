@@ -7,16 +7,20 @@ using Umbraco.Core.Models;
 using Umbraco.Core.Publishing;
 using Umbraco.Core.Services;
 using Umbraco.Core.Sync;
+using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Web;
 using Umbraco.Web.Cache;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
-    public abstract partial class SearchApplicationEventHandler : ApplicationEventHandler
+    public abstract partial class SearchApplicationEventHandler<TSearchSettings> : ApplicationEventHandler
+        where TSearchSettings : ISearchSettings
     {
-        protected SearchApplicationEventHandler()
+        protected SearchApplicationEventHandler(TSearchSettings searchSettings)
         {
+            SearchSettings<TSearchSettings>.Set(searchSettings);
+
             ContentService.Published += ContentService_Published;
             ContentService.UnPublished += ContentServiceOnUnPublished;
             ContentService.Trashed += ContentServiceOnTrashed;
@@ -28,8 +32,8 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
 
         protected override void ApplicationInitialized(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
-            LogHelper.Info<SearchApplicationEventHandler>(() => "Initialising configuration for Elasticsearch integration");
-            Initialise();
+            LogHelper.Info<SearchApplicationEventHandler<TSearchSettings>>(() => "Initialising configuration for Elasticsearch integration");
+            Initialise(SearchSettings<TSearchSettings>.Current);
         }
 
         protected override void ApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)

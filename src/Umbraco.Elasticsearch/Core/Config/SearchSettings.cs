@@ -2,21 +2,22 @@ using System.Configuration;
 
 namespace Umbraco.Elasticsearch.Core.Config
 {
-    public static class SearchSettings
+    public static class SearchSettings<TSearchSettings> where TSearchSettings : ISearchSettings
     {
-        private static ISearchSettings _current;
+        private static TSearchSettings _current;
 
-        public static ISearchSettings Current
+        public static TSearchSettings Current
         {
             get
             {
                 if (_current == null)
-                    throw new ConfigurationErrorsException(string.Format("{0} have not been configured, please ensure Set() is called before accessing this configuration", typeof(SearchSettings)));
+                    throw new ConfigurationErrorsException(
+                        $"{typeof (SearchSettings<TSearchSettings>)} have not been configured, please ensure Set() is called before accessing this configuration");
                 return _current;
             }
         }
 
-        public static void Set(ISearchSettings settings)
+        public static void Set(TSearchSettings settings)
         {
             _current = settings;
         }
