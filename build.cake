@@ -114,6 +114,7 @@ Task("Package")
             Properties = new Dictionary<string, string> { { "Configuration", configuration }},
             Symbols = true,
             NoPackageAnalysis = true,
+            Version = versionInfo.NuGetVersionV2,
             OutputDirectory = artifacts
         };
         settings.ArgumentCustomization = args => args.Append("-IncludeReferencedProjects");
