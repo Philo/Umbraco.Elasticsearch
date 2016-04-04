@@ -1,4 +1,4 @@
-﻿using Umbraco.Elasticsearch.Core.Config;
+﻿using Umbraco.Elasticsearch.Core.Utils;
 
 namespace Umbraco.Elasticsearch
 {

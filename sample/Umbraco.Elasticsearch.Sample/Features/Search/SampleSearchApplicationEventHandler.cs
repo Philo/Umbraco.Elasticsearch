@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using Nest;
 using Nest.Indexify;
 using Nest.Indexify.Contributors.Analysis.English;
 using Nest.Indexify.Contributors.IndexSettings;
 using Umbraco.Elasticsearch.Core.Config;
+using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.EventHandlers;
 
 namespace Umbraco.Elasticsearch.Sample.Features.Search
@@ -21,6 +23,11 @@ namespace Umbraco.Elasticsearch.Sample.Features.Search
         protected override IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client)
         {
             return new IndexCreationStrategy(client);
+        }
+
+        protected override IEnumerable<IContentIndexService> RegisterContentIndexingServices()
+        {
+            yield return new ArticleContentIndexService();
         }
 
         private class IndexCreationStrategy : ElasticsearchIndexCreationStrategy

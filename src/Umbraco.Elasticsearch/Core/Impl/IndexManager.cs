@@ -27,17 +27,6 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
                 Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping());
                 Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping());
-
-                /*
-                foreach (var indexService in UmbracoSearchFactory.GetContentIndexServices())
-                {
-                    indexService.UpdateIndexTypeMapping();
-                }
-
-                foreach (var indexService in UmbracoSearchFactory.GetMediaIndexServices())
-                {
-                    indexService.UpdateIndexTypeMapping();
-                }*/
             }
         }
     }

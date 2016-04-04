@@ -11,7 +11,7 @@ using Umbraco.Web;
 
 namespace Umbraco.Elasticsearch.Core.Content.Impl
 {
-    public abstract class ContentIndexService<TContentDocument> : IContentIndexService where TContentDocument : ContentDocument, new()
+    public abstract class ContentIndexService<TUmbracoDocument> : IContentIndexService where TUmbracoDocument : UmbracoDocument, new()
     {
         private readonly IElasticClient _client;
         private readonly IElasticsearchRepository _repository;
@@ -35,7 +35,7 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
             if (content.Published)
             {
                 var doc = CreateCore(content);
-                _repository.Save(doc);
+                IndexCore(_repository, doc);
             }
             else
             {
@@ -43,12 +43,22 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
             }
         }
 
+        protected virtual void IndexCore(IElasticsearchRepository repository, TUmbracoDocument document)
+        {
+            repository.Save(document);
+        }
+
         public void Remove(IContent content)
         {
+            RemoveCore(_repository, content);
+        }
+
+        protected virtual void RemoveCore(IElasticsearchRepository repository, IContent content)
+        {
             // this might be flawed if the document id isnt the node id
-            if (_repository.Exists<TContentDocument>(content.Id.ToString()))
+            if (repository.Exists<TUmbracoDocument>(content.Id.ToString()))
             {
-                _repository.Delete<TContentDocument>(content.Id.ToString());
+                repository.Delete<TUmbracoDocument>(content.Id.ToString());
             }
         }
 
@@ -59,7 +69,7 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
 
         protected virtual string InitialiseIndexTypeName()
         {
-            return typeof(TContentDocument).GetCustomAttribute<ElasticTypeAttribute>()?.Name;
+            return typeof(TUmbracoDocument).GetCustomAttribute<ElasticTypeAttribute>()?.Name;
         }
 
         public virtual bool ShouldIndex(IContent content)
@@ -69,32 +79,32 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
 
         public void UpdateIndexTypeMapping()
         {
-            var mapping = _client.GetMapping<TContentDocument>();
+            var mapping = _client.GetMapping<TUmbracoDocument>();
             if (mapping.Mapping == null && !mapping.Mappings.Any())
             {
                 UpdateIndexTypeMappingCore(_client);
-                LogHelper.Info<ContentIndexService<TContentDocument>>(() => $"Updated content type mapping for '{typeof(TContentDocument).Name}' using type name '{InitialiseIndexTypeName()}'");
+                LogHelper.Info<ContentIndexService<TUmbracoDocument>>(() => $"Updated content type mapping for '{typeof(TUmbracoDocument).Name}' using type name '{InitialiseIndexTypeName()}'");
             }
         }
 
         public void ClearIndexType()
         {
-            _repository.Query(new DeleteAllOfDocumentTypeQuery<TContentDocument>());
+            _repository.Query(new DeleteAllOfDocumentTypeQuery<TUmbracoDocument>());
             UpdateIndexTypeMapping();
         }
 
-        protected virtual void Create(TContentDocument doc, IContent content)
+        protected virtual void Create(TUmbracoDocument doc, IContent content)
         {
 
         }
 
         protected abstract void UpdateIndexTypeMappingCore(IElasticClient client);
 
-        private TContentDocument CreateCore(IContent contentInstance)
+        private TUmbracoDocument CreateCore(IContent contentInstance)
         {
-            var doc = new TContentDocument();
+            var doc = new TUmbracoDocument();
 
-            doc.NodeId = contentInstance.Id;
+            doc.Id = IdFor(contentInstance);
             doc.Title = contentInstance.Name;
             doc.Url = library.NiceUrl(contentInstance.Id);
 
@@ -103,5 +113,9 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
             return doc;
         }
 
+        protected virtual string IdFor(IContent contentInstance)
+        {
+            return contentInstance.Id.ToString();
+        }
     }
 }

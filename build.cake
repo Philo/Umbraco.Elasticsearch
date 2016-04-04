@@ -7,7 +7,7 @@
 var target                  = Argument("target", "Default");
 var configuration           = Argument("configuration", "Release");
 var solutionPath            = MakeAbsolute(File(Argument("solutionPath", "./Umbraco.Elasticsearch.sln")));
-var nugetProject            = Argument("nugetProject", "Umbraco.Elasticsearch");
+var nugetProjects            = Argument("nugetProjects", "Umbraco.Elasticsearch,Umbraco.Elasticsearch.Core");
 
 
 //////////////////////////////////////////////////////////////////////
@@ -23,9 +23,9 @@ var buildOutput             = MakeAbsolute(Directory(artifacts +"/build/"));
 var testResultsPath         = MakeAbsolute(Directory(artifacts + "./test-results"));
 var versionAssemblyInfo     = MakeAbsolute(File(Argument("versionAssemblyInfo", "VersionAssemblyInfo.cs")));
 
-FilePath nugetProjectPath            = null;
-SolutionParserResult solution        = null;
-GitVersion versionInfo               = null;
+IEnumerable<FilePath> nugetProjectPaths     = null;
+SolutionParserResult solution               = null;
+GitVersion versionInfo                      = null;
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
@@ -37,13 +37,12 @@ Setup(() => {
     if(!FileExists(solutionPath)) throw new Exception(string.Format("Solution file not found - {0}", solutionPath.ToString()));
     solution = ParseSolution(solutionPath.ToString());
 
-    var project = solution.Projects.FirstOrDefault(x => x.Name == nugetProject);
-    if(project == null) throw new Exception(string.Format("Unable to find project '{0}' in solution '{1}'", nugetProject, solutionPath.GetFilenameWithoutExtension()));
-    nugetProjectPath = project.Path;
+    var projects = solution.Projects.Where(x => nugetProjects.Contains(x.Name));
+    if(projects == null || !projects.Any()) throw new Exception(string.Format("Unable to find projects '{0}' in solution '{1}'", nugetProjects, solutionPath.GetFilenameWithoutExtension()));
+    nugetProjectPaths = projects.Select(p => p.Path);
     
-    if(!FileExists(nugetProjectPath)) throw new Exception("project path not found");
-    Information("[Setup] Using Solution '{0}' with project '{1}'", solutionPath.ToString(), project.Name);    
-        
+    // if(!FileExists(nugetProjectPath)) throw new Exception("project path not found");
+    Information("[Setup] Using Solution '{0}'", solutionPath.ToString());
 });
 
 Task("Clean")
@@ -110,12 +109,16 @@ Task("Package")
     .IsDependentOn("Build")
     .Does(() => 
 {
-    NuGetPack(nugetProjectPath, new NuGetPackSettings {
-        Properties = new Dictionary<string, string> { { "Configuration", configuration }},
-        Symbols = true,
-        NoPackageAnalysis = true,
-        OutputDirectory = artifacts
-    });                     
+    foreach(var nugetProjectPath in nugetProjectPaths) {
+        var settings = new NuGetPackSettings {
+            Properties = new Dictionary<string, string> { { "Configuration", configuration }},
+            Symbols = true,
+            NoPackageAnalysis = true,
+            OutputDirectory = artifacts
+        };
+        settings.ArgumentCustomization = args => args.Append("-IncludeReferencedProjects");
+        NuGetPack(nugetProjectPath, settings);                     
+    }
 });
 
 /*

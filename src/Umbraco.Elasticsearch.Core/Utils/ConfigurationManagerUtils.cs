@@ -1,8 +1,8 @@
 ﻿using System.Configuration;
 
-namespace Umbraco.Elasticsearch.Core.Config
+namespace Umbraco.Elasticsearch.Core.Utils
 {
-    internal static class ConfigurationManagerUtils
+    public static class ConfigurationManagerUtils
     {
         public static string FromAppSettings(this string key)
         {

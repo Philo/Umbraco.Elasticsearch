@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Diagnostics;
 using System.Linq;
 using Nest;
 using Nest.Indexify;
@@ -36,7 +35,7 @@ namespace Umbraco.Elasticsearch
         public static void RegisterIndexStrategy(IElasticsearchIndexCreationStrategy strategy)
         {
             _indexStrategy = strategy;
-            Trace.WriteLine($"Registered index strategy [{strategy.GetType().Name}]");
+            LogHelper.Info<IElasticsearchIndexCreationStrategy>($"Registered index strategy [{strategy.GetType().Name}]");
         }
 
         public static void RegisterContentIndexService<TIndexService>(TIndexService indexService, Func<IContent, bool> resolver) where TIndexService : IContentIndexService

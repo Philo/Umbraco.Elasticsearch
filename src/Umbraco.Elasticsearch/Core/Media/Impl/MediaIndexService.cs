@@ -10,7 +10,7 @@ using Umbraco.Web;
 
 namespace Umbraco.Elasticsearch.Core.Media.Impl
 {
-    public abstract class MediaIndexService<TMediaDocument> : IMediaIndexService where TMediaDocument : MediaDocument, new()
+    public abstract class MediaIndexService<TMediaDocument> : IMediaIndexService where TMediaDocument : UmbracoDocument, new()
     {
         private readonly IElasticClient _client;
         private readonly IElasticsearchRepository _repository;
@@ -34,16 +34,26 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
             if (ShouldIndex(media))
             {
                 var doc = CreateCore(media);
-                _repository.Save(doc);
+                IndexCore(_repository, doc);
             }
+        }
+
+        protected virtual void IndexCore(IElasticsearchRepository repository, TMediaDocument document)
+        {
+            repository.Save(document);
         }
 
         public void Remove(IMedia media)
         {
-                // this might be flawed if the document id isnt the node id
-            if (_repository.Exists<TMediaDocument>(media.Id.ToString()))
+            RemoveCore(_repository, media);
+        }
+
+        protected virtual void RemoveCore(IElasticsearchRepository repository, IMedia media)
+        {
+            // this might be flawed if the document id isnt the node id
+            if (repository.Exists<TMediaDocument>(media.Id.ToString()))
             {
-                _repository.Delete<TMediaDocument>(media.Id.ToString());
+                repository.Delete<TMediaDocument>(media.Id.ToString());
             }
         }
 
@@ -86,13 +96,18 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
 
             var doc = new TMediaDocument();
 
-            doc.NodeId = media.Id;
+            doc.Id = IdFor(media);
             doc.Title = media.Name;
             doc.Url = media.Url();
 
             Create(doc, media);
 
             return doc;
+        }
+
+        protected virtual string IdFor(IPublishedContent media)
+        {
+            return media.Id.ToString();
         }
 
         protected virtual void Create(TMediaDocument doc, IPublishedContent media)
