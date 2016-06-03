@@ -11,11 +11,6 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
     <tags>Umbraco Elasticsearch search</tags>
-    <dependencies>
-        <dependency id="UmbracoCms.Core" version="7.3.7" />
-        <dependency id="Nest.Searchify" version="0.9.1" />
-        <dependency id="Nest.Indexify" version="0.3.0" />
-    </dependencies>
   </metadata>
   <files>
     <file src="App_Plugins\searchSection\**\*" target="content\App_Plugins\searchSection" />

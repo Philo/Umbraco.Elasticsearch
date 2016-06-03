@@ -1,6 +1,6 @@
 ﻿using System.Configuration;
 
-namespace Umbraco.Elasticsearch.Core.Utils
+namespace Umbraco.Elasticsearch.Utils
 {
     public static class ConfigurationManagerUtils
     {

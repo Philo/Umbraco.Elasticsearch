@@ -303,6 +303,11 @@
     <Compile Include="Core\Admin\Api\SearchApiController.cs" />
     <Compile Include="Core\Admin\Section\SearchTreeController.cs" />
     <Compile Include="Core\Admin\UmbracoStartup.cs" />
+    <Compile Include="Core\Config\DefaultIndexNameResolver.cs" />
+    <Compile Include="Core\Config\FromConfigSearchSettings.cs" />
+    <Compile Include="Core\Config\ISearchIndexNameResolver.cs" />
+    <Compile Include="Core\Config\ISearchSettings.cs" />
+    <Compile Include="Core\Config\SearchSettings.cs" />
     <Compile Include="Core\Content\IContentIndexService.cs" />
     <Compile Include="Core\Content\Impl\ContentIndexer.cs" />
     <Compile Include="Core\Content\Impl\ContentIndexService.cs" />
@@ -323,6 +328,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="UmbracoSearchFactory.cs" />
+    <Compile Include="Utils\ConfigurationManagerUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -336,12 +342,6 @@
     <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\manage.html" />
     <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\rebuild.html" />
     <None Include="App_Plugins\searchSection\search.resource.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Umbraco.Elasticsearch.Core\Umbraco.Elasticsearch.Core.csproj">
-      <Project>{d55f8bf2-ff62-4569-8dd9-d064a9f44b99}</Project>
-      <Name>Umbraco.Elasticsearch.Core</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />

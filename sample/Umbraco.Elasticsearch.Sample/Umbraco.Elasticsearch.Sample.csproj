@@ -398,10 +398,6 @@
     <Analyzer Include="..\..\packages\Microsoft.CodeAnalysis.Analyzers.1.0.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Umbraco.Elasticsearch.Core\Umbraco.Elasticsearch.Core.csproj">
-      <Project>{d55f8bf2-ff62-4569-8dd9-d064a9f44b99}</Project>
-      <Name>Umbraco.Elasticsearch.Core</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\src\Umbraco.Elasticsearch\Umbraco.Elasticsearch.csproj">
       <Project>{28c290df-1357-4de1-8947-b7b65017f766}</Project>
       <Name>Umbraco.Elasticsearch</Name>

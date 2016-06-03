@@ -1,4 +1,5 @@
 // #tool "xunit.runner.console"
+#tool "GitVersion.CommandLine"
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -7,7 +8,7 @@
 var target                  = Argument("target", "Default");
 var configuration           = Argument("configuration", "Release");
 var solutionPath            = MakeAbsolute(File(Argument("solutionPath", "./Umbraco.Elasticsearch.sln")));
-var nugetProjects            = Argument("nugetProjects", "Umbraco.Elasticsearch,Umbraco.Elasticsearch.Core");
+var nugetProjects            = Argument("nugetProjects", "Umbraco.Elasticsearch");
 
 
 //////////////////////////////////////////////////////////////////////
@@ -115,9 +116,9 @@ Task("Package")
             Symbols = true,
             NoPackageAnalysis = true,
             Version = versionInfo.NuGetVersionV2,
-            OutputDirectory = artifacts
+            OutputDirectory = artifacts,
+            IncludeReferencedProjects = true
         };
-        settings.ArgumentCustomization = args => args.Append("-IncludeReferencedProjects");
         NuGetPack(nugetProjectPath, settings);                     
     }
 });

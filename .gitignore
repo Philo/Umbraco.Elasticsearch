@@ -4,10 +4,8 @@
 [Pp]ackages/
 
 # Build related
-/tools/**
-/tools/**/*
-!/tools/packages.config
-VersionAssemblyInfo.cs
+/tools/
+/VersionAssemblyInfo.cs
 /artifacts/
 node_modules
 

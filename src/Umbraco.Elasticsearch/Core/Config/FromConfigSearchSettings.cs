@@ -1,5 +1,5 @@
 using System;
-using Umbraco.Elasticsearch.Core.Utils;
+using Umbraco.Elasticsearch.Utils;
 
 namespace Umbraco.Elasticsearch.Core.Config
 {

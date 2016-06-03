@@ -1,6 +1,4 @@
-﻿using System;
-using Lucene.Net.Analysis;
-using Nest;
+﻿using Nest;
 using Nest.Searchify;
 
 namespace Umbraco.Elasticsearch.Core
