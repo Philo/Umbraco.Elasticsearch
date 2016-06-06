@@ -10,7 +10,7 @@ namespace Umbraco.Elasticsearch
         {
             get
             {
-                var value = nameof(AvailbilityRefreshIntervalMinutes).FromAppSettingsWithPrefix("Umbraco.Elasticsearch:", "20");
+                var value = nameof(AvailbilityRefreshIntervalMinutes).FromAppSettingsWithPrefix("umbElasticsearch:", "20");
                 short interval;
                 if (short.TryParse(value, out interval))
                 {

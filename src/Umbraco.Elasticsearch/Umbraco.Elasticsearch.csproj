@@ -153,8 +153,8 @@
       <HintPath>..\..\packages\NEST.1.6.0\lib\net45\Nest.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nest.Indexify, Version=0.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Nest.Indexify.0.3.0\lib\net452\Nest.Indexify.dll</HintPath>
+    <Reference Include="Nest.Indexify, Version=0.3.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nest.Indexify.0.3.1\lib\net452\Nest.Indexify.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Nest.Queryify, Version=0.6.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -300,9 +300,8 @@
     <Compile Include="..\..\VersionAssemblyInfo.cs">
       <Link>Properties\VersionAssemblyInfo.cs</Link>
     </Compile>
+    <None Include="content\UmbracoElasticsearchStartup.cs.pp" />
     <Compile Include="Core\Admin\Api\SearchApiController.cs" />
-    <Compile Include="Core\Admin\Section\SearchTreeController.cs" />
-    <Compile Include="Core\Admin\UmbracoStartup.cs" />
     <Compile Include="Core\Config\DefaultIndexNameResolver.cs" />
     <Compile Include="Core\Config\FromConfigSearchSettings.cs" />
     <Compile Include="Core\Config\ISearchIndexNameResolver.cs" />
@@ -331,18 +330,19 @@
     <Compile Include="Utils\ConfigurationManagerUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="App_Plugins\umbElasticsearch\umbElasticsearch.controller.js" />
+    <Content Include="App_Plugins\umbElasticsearch\umbElasticsearch.html" />
+    <None Include="App_Plugins\umbElasticsearch\umbElasticsearch.resource.js" />
     <None Include="app.config" />
-    <None Include="App_Plugins\searchSection\package.manifest" />
+    <None Include="App_Plugins\umbElasticsearch\package.manifest" />
+    <None Include="content\dashboard.config.uninstall.xdt" />
+    <None Include="content\dashboard.config.install.xdt" />
+    <None Include="content\web.config.install.xdt" />
+    <None Include="content\web.config.uninstall.xdt" />
     <None Include="packages.config" />
     <None Include="Umbraco.Elasticsearch.nuspec" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\delete.html" />
-    <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\info.html" />
-    <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\manage.html" />
-    <None Include="App_Plugins\searchSection\backoffice\searchSectionTree\rebuild.html" />
-    <None Include="App_Plugins\searchSection\search.resource.js" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" />
   <Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == ''">

@@ -1,8 +1,11 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Nest;
+
 namespace Umbraco.Elasticsearch.Core
 {
     public interface IIndexManager
     {
-        void Delete();
-        void Create(bool deleteExisting = false);
+        void Create(bool activate = false);
     }
 }

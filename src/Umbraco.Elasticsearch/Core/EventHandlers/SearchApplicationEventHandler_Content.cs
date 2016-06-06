@@ -16,14 +16,16 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         {
             return Enumerable.Empty<IContentIndexService>();
         }
+
         /// <summary>
         /// Override me to alter the indexing process for invidual content items
         /// </summary>
         /// <param name="indexService">the index service applicable to the <param name="item">content</param></param>
         /// <param name="item">content item</param>
-        protected virtual void IndexContent(IContentIndexService indexService, IContent item)
+        /// <param name="indexName">index to add the item to</param>
+        protected virtual void IndexContent(IContentIndexService indexService, IContent item, string indexName)
         {
-            indexService.Index(item);
+            indexService.Index(item, indexName);
         }
 
         /// <summary>
@@ -31,9 +33,10 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         /// </summary>
         /// <param name="indexService">the index service applicable to the <param name="item">content</param></param>
         /// <param name="item">content item</param>
-        protected virtual void RemoveContent(IContentIndexService indexService, IContent item)
+        /// <param name="indexName">index to add the item to</param>
+        protected virtual void RemoveContent(IContentIndexService indexService, IContent item, string indexName)
         {
-            indexService.Remove(item);
+            indexService.Remove(item, indexName);
         }
 
         private void IndexContentCore(IEnumerable<IContent> entities, EventMessages messages)
@@ -41,19 +44,20 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             foreach (var item in entities)
             {
                 var indexService = UmbracoSearchFactory.GetContentIndexService(item);
+                var indexName = UmbracoSearchFactory.Client.Infer.DefaultIndex;
                 if (indexService != null)
                 {
                     try
                     {
                         if (indexService.IsExcludedFromIndex(item))
                         {
-                            RemoveContent(indexService, item);
+                            RemoveContent(indexService, item, indexName);
                             messages?.Add(new EventMessage("Search", "Content removed from search index", EventMessageType.Success));
                             LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
                         }
                         else
                         {
-                            IndexContent(indexService, item);
+                            IndexContent(indexService, item, indexName);
                             messages?.Add(new EventMessage("Search", "Content added to search index", EventMessageType.Success));
                             LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been indexed");
                         }
@@ -74,9 +78,10 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                 try
                 {
                     var indexService = UmbracoSearchFactory.GetContentIndexService(item);
+                    var indexName = UmbracoSearchFactory.Client.Infer.DefaultIndex;
                     if (indexService != null && indexService.ShouldIndex(item))
                     {
-                        RemoveContent(indexService, item);
+                        RemoveContent(indexService, item, indexName);
                         messages?.Add(new EventMessage("Search", "Removed content from search index", EventMessageType.Success));
                         LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Content ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
                     }

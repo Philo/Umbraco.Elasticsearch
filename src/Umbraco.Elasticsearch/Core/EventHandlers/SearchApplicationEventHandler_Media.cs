@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Umbraco.Core;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
@@ -25,9 +26,10 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         /// </summary>
         /// <param name="indexService">the index service applicable to the <param name="item">media</param></param>
         /// <param name="item">media item</param>
-        protected virtual void IndexMedia(IMediaIndexService indexService, IMedia item)
+        /// <param name="indexName">index to add the item to</param>
+        protected virtual void IndexMedia(IMediaIndexService indexService, IMedia item, string indexName)
         {
-            indexService.Index(item);
+            indexService.Index(item, indexName);
         }
 
         /// <summary>
@@ -35,9 +37,10 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         /// </summary>
         /// <param name="indexService">the index service applicable to the <param name="item">media</param></param>
         /// <param name="item">media item</param>
-        protected virtual void RemoveMedia(IMediaIndexService indexService, IMedia item)
+        /// <param name="indexName">index to add the item to</param>
+        protected virtual void RemoveMedia(IMediaIndexService indexService, IMedia item, string indexName)
         {
-            indexService.Remove(item);
+            indexService.Remove(item, indexName);
         }
 
         private void IndexMediaCore(IEnumerable<IMedia> media, EventMessages messages)
@@ -45,17 +48,18 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             foreach (var item in media)
             {
                 var indexService = UmbracoSearchFactory.GetMediaIndexService(item);
+                var indexName = UmbracoSearchFactory.Client.Infer.DefaultIndex;
                 if (indexService != null)
                 {
                     if (indexService.IsExcludedFromIndex(item))
                     {
-                        RemoveMedia(indexService, item);
+                        RemoveMedia(indexService, item, indexName);
                         messages?.Add(new EventMessage("Search", "Media removed from search index", EventMessageType.Success));
                         LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Media ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
                     }
                     else
                     {
-                        IndexMedia(indexService, item);
+                        IndexMedia(indexService, item, indexName);
                         messages?.Add(new EventMessage("Search", "Media added to search index", EventMessageType.Success));
                         LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Media ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been indexed");
                     }
@@ -68,9 +72,10 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             foreach (var item in media)
             {
                 var indexService = UmbracoSearchFactory.GetMediaIndexService(item);
+                var indexName = UmbracoSearchFactory.Client.Infer.DefaultIndex;
                 if (indexService != null && indexService.ShouldIndex(item))
                 {
-                    RemoveMedia(indexService, item);
+                    RemoveMedia(indexService, item, indexName);
                     messages?.Add(new EventMessage("Search", "Removed media from search index", EventMessageType.Success));
                     LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(() => $"Media ({item.ContentType.Alias}) '{item.Name}' with Id '{item.Id}' has been removed from search index");
                 }

@@ -4,15 +4,19 @@ namespace Umbraco.Elasticsearch.Core
 {
     public interface IIndexService<in TEntity> where TEntity : IContentBase
     {
-        void Index(TEntity content);
-        void Remove(TEntity content);
+        void Index(TEntity content, string indexName);
+        void Remove(TEntity content, string indexName);
 
         bool IsExcludedFromIndex(TEntity content);
 
         bool ShouldIndex(TEntity content);
 
-        void UpdateIndexTypeMapping();
+        void UpdateIndexTypeMapping(string indexName);
 
-        void ClearIndexType();
+        void ClearIndexType(string indexName);
+
+        string EntityTypeName { get; }
+
+        string DocumentTypeName { get; }
     }
 }

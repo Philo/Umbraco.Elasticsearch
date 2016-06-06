@@ -29,31 +29,31 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
 
         protected MediaIndexService() : this(UmbracoSearchFactory.Client, UmbracoSearchFactory.Repository, UmbracoContext.Current) { }
 
-        public void Index(IMedia media)
+        public void Index(IMedia media, string indexName)
         {
             if (ShouldIndex(media))
             {
                 var doc = CreateCore(media);
-                IndexCore(_repository, doc);
+                IndexCore(_repository, doc, indexName);
             }
         }
 
-        protected virtual void IndexCore(IElasticsearchRepository repository, TMediaDocument document)
+        protected virtual void IndexCore(IElasticsearchRepository repository, TMediaDocument document, string indexName)
         {
-            repository.Save(document);
+            repository.Save(document, indexName);
         }
 
-        public void Remove(IMedia media)
+        public void Remove(IMedia media, string indexName)
         {
-            RemoveCore(_repository, media);
+            RemoveCore(_repository, media, indexName);
         }
 
-        protected virtual void RemoveCore(IElasticsearchRepository repository, IMedia media)
+        protected virtual void RemoveCore(IElasticsearchRepository repository, IMedia media, string indexName)
         {
             // this might be flawed if the document id isnt the node id
-            if (repository.Exists<TMediaDocument>(media.Id.ToString()))
+            if (repository.Exists<TMediaDocument>(media.Id.ToString(), indexName))
             {
-                repository.Delete<TMediaDocument>(media.Id.ToString());
+                repository.Delete<TMediaDocument>(media.Id.ToString(), indexName);
             }
         }
 
@@ -72,22 +72,25 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
             return media.ContentType.Alias.Equals(IndexTypeName, StringComparison.CurrentCultureIgnoreCase);
         }
 
-        public void UpdateIndexTypeMapping()
+        public void UpdateIndexTypeMapping(string indexName)
         {
-            var mapping = _client.GetMapping<TMediaDocument>();
+            var mapping = _client.GetMapping<TMediaDocument>(m => m.Index(indexName));
             if (mapping.Mapping == null && !mapping.Mappings.Any())
             {
-                UpdateIndexTypeMappingCore(_client);
+                UpdateIndexTypeMappingCore(_client, indexName);
                 LogHelper.Info<MediaIndexService<TMediaDocument>>(() => $"Updated media type mapping for '{typeof(TMediaDocument).Name}' using type name '{InitialiseIndexTypeName()}'");
             }
         }
-        public void ClearIndexType()
+        public void ClearIndexType(string indexName)
         {
-            _repository.Query(new DeleteAllOfDocumentTypeQuery<TMediaDocument>());
-            UpdateIndexTypeMapping();
+            _repository.Query(new DeleteAllOfDocumentTypeQuery<TMediaDocument>(), indexName);
+            UpdateIndexTypeMapping(indexName);
         }
 
-        protected abstract void UpdateIndexTypeMappingCore(IElasticClient client);
+        public string EntityTypeName => typeof(TMediaDocument).Name;
+        public string DocumentTypeName { get; } = typeof(TMediaDocument).GetCustomAttribute<ElasticTypeAttribute>().Name;
+
+        protected abstract void UpdateIndexTypeMappingCore(IElasticClient client, string indexName);
 
         #region Move this to derived types
         private TMediaDocument CreateCore(IMedia mediaInstance)

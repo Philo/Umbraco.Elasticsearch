@@ -1,14 +1,11 @@
-﻿using System.Linq;
-using Nest;
-using Nest.Searchify;
+﻿using Nest;
 using Umbraco.Core.Models;
 using Umbraco.Elasticsearch.Core;
-using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.Content.Impl;
 
 namespace Umbraco.Elasticsearch.Sample.Features.Search
 {
-    [ElasticType(Name = "dtArticle", IdProperty = "NodeId")]
+    [ElasticType(Name = "dtArticle", IdProperty = "Id")]
     public class ArticleDocument : UmbracoDocument
     {
         
@@ -16,9 +13,9 @@ namespace Umbraco.Elasticsearch.Sample.Features.Search
 
     public class ArticleContentIndexService : ContentIndexService<ArticleDocument>
     {
-        protected override void UpdateIndexTypeMappingCore(IElasticClient client)
+        protected override void UpdateIndexTypeMappingCore(IElasticClient client, string indexName)
         {
-            client.Map<ArticleDocument>(m => m.MapFromAttributes());
+            client.Map<ArticleDocument>(m => m.MapFromAttributes().Index(indexName));
         }
 
         protected override void Create(ArticleDocument doc, IContent content)

@@ -2,6 +2,6 @@ namespace Umbraco.Elasticsearch.Core
 {
     public interface IEntityIndexer
     {
-        void Build();
+        void Build(string indexName);
     }
 }

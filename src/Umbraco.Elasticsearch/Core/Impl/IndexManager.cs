@@ -1,33 +1,56 @@
+using System;
 using System.Threading.Tasks;
+using Nest;
+using Nest.Indexify.Contributors;
 using Umbraco.Core.Logging;
 
 namespace Umbraco.Elasticsearch.Core.Impl
 {
     public class IndexManager : IIndexManager {
-        public void Delete()
+        public void Create(bool activate = false)
         {
-            if (UmbracoSearchFactory.Client.IndexExists(i => i.Index(UmbracoSearchFactory.Client.Infer.DefaultIndex)).Exists)
-            {
-                UmbracoSearchFactory.Client.DeleteIndex(i => i.Index(UmbracoSearchFactory.Client.Infer.DefaultIndex));
-                LogHelper.Info<IndexManager>(() => $"Search index '{UmbracoSearchFactory.Client.Infer.DefaultIndex}' has been deleted");
-            }
+            var strategy = UmbracoSearchFactory.GetIndexStrategy();
+            var indexName = UmbracoSearchFactory.Client.Infer.DefaultIndex;
+
+            strategy.Create(new AliasedIndexContributor(activate));
+            LogHelper.Info<IndexManager>(() => $"Search index '{indexName}' has been created (activate: {activate})");
+
+            Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping(indexName));
+            Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping(indexName));
+        }
+    }
+
+    internal class AliasedIndexContributor : ElasticsearchIndexCreationContributor, IElasticsearchIndexPreCreationContributor, IElasticsearchIndexCreationSuccessContributor
+    {
+        private readonly bool _activate;
+        private string _timestampedIndexName;
+
+        public AliasedIndexContributor(bool activate = false)
+        {
+            _activate = activate;
         }
 
-        public void Create(bool deleteExisting = false)
+        public override void ContributeCore(CreateIndexDescriptor descriptor, IElasticClient client)
         {
-            if (deleteExisting) Delete();
+        }
 
-            if (
-                !UmbracoSearchFactory.Client.IndexExists(i => i.Index(UmbracoSearchFactory.Client.Infer.DefaultIndex))
-                    .Exists)
+        public string OnPreCreate(IElasticClient client, string indexName)
+        {
+            _timestampedIndexName = $"{indexName}-{DateTime.UtcNow.ToString("yyyyMMddHHmmss")}";
+            return _timestampedIndexName;
+        }
+
+        public void OnSuccess(IElasticClient client, IIndicesOperationResponse response)
+        {
+            if (_activate)
             {
-                var strategy = UmbracoSearchFactory.GetIndexStrategy();
-                strategy.Create();
-                LogHelper.Info<IndexManager>(() => $"Search index '{UmbracoSearchFactory.Client.Infer.DefaultIndex}' has been created");
-
-                Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping());
-                Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping());
+                var indexName = client.Infer.DefaultIndex;
+                client.Alias(a => a
+                    .Remove(r => r.Alias(indexName).Index($"{indexName}*"))
+                    .Add(aa => aa.Alias(indexName).Index(_timestampedIndexName))
+                    );
             }
         }
     }
+
 }

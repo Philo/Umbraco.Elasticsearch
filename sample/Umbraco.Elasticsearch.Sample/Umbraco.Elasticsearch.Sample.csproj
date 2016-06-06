@@ -177,8 +177,8 @@
       <HintPath>..\..\packages\NEST.1.6.0\lib\net45\Nest.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nest.Indexify, Version=0.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Nest.Indexify.0.3.0\lib\net452\Nest.Indexify.dll</HintPath>
+    <Reference Include="Nest.Indexify, Version=0.3.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nest.Indexify.0.3.1\lib\net452\Nest.Indexify.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Nest.Queryify, Version=0.6.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -320,6 +320,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="App_Plugins\umbElasticsearch\instructions.html" />
+    <Content Include="App_Plugins\umbElasticsearch\umbElasticsearch.controller.js" />
+    <Content Include="App_Plugins\umbElasticsearch\umbElasticsearch.html" />
+    <None Include="App_Plugins\umbElasticsearch\umbElasticsearch.resource.js" />
     <Content Include="packages.config" />
     <Content Include="App_Plugins\ModelsBuilder\package.manifest" />
     <Content Include="Views\Web.config" />
@@ -348,7 +352,8 @@
     <Content Include="Config\BaseRestExtensions.config" />
     <Content Include="Config\applications.config" />
     <Content Include="Config\404handlers.config" />
-    <Content Include="App_Plugins\searchSection\package.manifest" />
+    <Content Include="Views\DtSearch\DtSearch.cshtml" />
+    <None Include="App_Plugins\umbElasticsearch\package.manifest" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -360,11 +365,6 @@
     <Content Include="App_Plugins\ModelsBuilder\modelsbuilder.controller.js" />
     <Content Include="App_Plugins\ModelsBuilder\modelsbuilder.htm" />
     <Content Include="App_Plugins\ModelsBuilder\modelsbuilder.resource.js" />
-    <Content Include="App_Plugins\searchSection\backoffice\searchSectionTree\delete.html" />
-    <Content Include="App_Plugins\searchSection\backoffice\searchSectionTree\info.html" />
-    <Content Include="App_Plugins\searchSection\backoffice\searchSectionTree\manage.html" />
-    <Content Include="App_Plugins\searchSection\backoffice\searchSectionTree\rebuild.html" />
-    <Content Include="App_Plugins\searchSection\search.resource.js" />
     <Content Include="Config\grid.editors.config.js" />
     <Content Include="Config\Lang\cs-CZ.user.xml" />
     <Content Include="Config\Lang\da-DK.user.xml" />
@@ -390,6 +390,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Features\Search\ArticleContentIndexService.cs" />
+    <Compile Include="Features\Search\DtSearchController.cs" />
     <Compile Include="Features\Search\SampleSearchApplicationEventHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -403,6 +404,7 @@
       <Name>Umbraco.Elasticsearch</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>

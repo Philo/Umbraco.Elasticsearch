@@ -20,33 +20,33 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
             return UmbracoSearchFactory.GetMediaIndexService(media);
         }
 
-        public void Build()
+        public void Build(string indexName)
         {
             foreach (var node in _mediaService.GetRootMedia())
             {
-                Publish(node, true);
+                Publish(node, indexName, true);
             }
         }
 
-        private void Publish(IMedia mediaInstance, bool isRecursive = false)
+        private void Publish(IMedia mediaInstance, string indexName, bool isRecursive = false)
         {
             if (mediaInstance != null)
             {
                 var indexService = IndexServiceFor(mediaInstance);
                 if (indexService?.IsExcludedFromIndex(mediaInstance) ?? false)
                 {
-                    indexService.Remove(mediaInstance);
+                    indexService.Remove(mediaInstance, indexName);
                 }
                 else
                 {
-                    indexService?.Index(mediaInstance);
+                    indexService?.Index(mediaInstance, indexName);
                 }
 
                 if (isRecursive && mediaInstance.Children().Any())
                 {
                     foreach (var child in mediaInstance.Children())
                     {
-                        Publish(child, true);
+                        Publish(child, indexName, true);
                     }
                 }
             }

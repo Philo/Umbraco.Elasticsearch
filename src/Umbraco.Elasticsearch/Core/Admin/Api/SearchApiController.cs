@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Nest;
+using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content.Impl;
 using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Media.Impl;
@@ -11,7 +12,7 @@ using Umbraco.Web.Mvc;
 
 namespace Umbraco.Elasticsearch.Core.Admin.Api
 {
-    [PluginController("searchSection")]
+    [PluginController("umbElasticsearch")]
     public class SearchApiController : UmbracoAuthorizedJsonController
     {
         private readonly IElasticClient _client;
@@ -24,44 +25,71 @@ namespace Umbraco.Elasticsearch.Core.Admin.Api
         public SearchApiController() : this(UmbracoSearchFactory.Client) { }
 
         [HttpGet]
-        public async Task<Dictionary<string, object>> Stats()
+        public IHttpActionResult MediaIndexServicesList()
         {
-            var response = await _client.IndicesStatsAsync();
-            if (response.Indices.ContainsKey(_client.Infer.DefaultIndex))
+            var media = UmbracoSearchFactory.GetMediaIndexServices();
+
+            return Ok(media.Select(x => new
             {
-                var indexStats = response.Indices[_client.Infer.DefaultIndex];
-                return new Dictionary<string, object>()
-                {
-                    {"timestamp", DateTime.UtcNow.ToString("O") },
-                    {"docCount", indexStats.Primaries.Documents.Count},
-                    {"totalQueries", indexStats.Primaries.Search.QueryTotal}
-                };
-            }
-            return new Dictionary<string, object>();
+                x.DocumentTypeName,
+                x.GetType().Name
+            }));
+        }
+
+        [HttpGet]
+        public IHttpActionResult ContentIndexServicesList()
+        {
+            var content = UmbracoSearchFactory.GetContentIndexServices();
+
+            return Ok(content.Select(x => new
+            {
+                x.DocumentTypeName,
+                x.GetType().Name
+            }));
         }
 
         [HttpPost]
-        public IHttpActionResult DeleteIndex()
+        public async Task DeleteIndexByName([FromBody] string indexName)
         {
-            var manager = new IndexManager();
-            try
-            {
-                manager.Delete();
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _client.DeleteIndexAsync(d => d.Index(indexName));
         }
 
+        [HttpPost]
+        public async Task ActivateIndexByName([FromBody] string indexName)
+        {
+            var indexAliasName = _client.Infer.DefaultIndex;
+            await _client.AliasAsync(a => a
+                .Remove(r => r.Alias(indexAliasName).Index($"{indexAliasName}*"))
+                .Add(aa => aa.Alias(indexAliasName).Index(indexName))
+                );
+        }
+
+        [HttpGet]
+        public async Task<object> IndicesInfo()
+        {
+            var response = await _client.IndicesStatsAsync();
+            return response.Indices.Where(x => x.Key.StartsWith(_client.Infer.DefaultIndex)).Select(x => new
+            {
+                Name = x.Key,
+                DocCount = x.Value.Total.Documents.Count,
+                Queries = x.Value.Total.Search.QueryTotal,
+                SizeInBytes = x.Value.Total.Store.SizeInBytes,
+                Status = GetStatus(x.Key) ? "Active" : ""
+            });
+        }
+
+        private bool GetStatus(string indexName)
+        {
+            return _client.AliasExists(x => x.Index(indexName).Name(_client.Infer.DefaultIndex)).Exists;
+        }
+        
         [HttpPost]
         public IHttpActionResult CreateIndex()
         {
             var manager = new IndexManager();
             try
             {
-                manager.Create(true);
+                manager.Create();
                 return Ok();
             }
             catch (Exception ex)
@@ -71,19 +99,19 @@ namespace Umbraco.Elasticsearch.Core.Admin.Api
         }
 
         [HttpPost]
-        public IHttpActionResult RebuildContentIndex()
+        public IHttpActionResult RebuildContentIndex([FromBody] string indexName)
         {
             var indexer = new ContentIndexer();
-            indexer.Build();
+            indexer.Build(indexName);
 
             return Ok();
         }
 
         [HttpPost]
-        public IHttpActionResult RebuildMediaIndex()
+        public IHttpActionResult RebuildMediaIndex([FromBody] string indexName)
         {
             var indexer = new MediaIndexer();
-            indexer.Build();
+            indexer.Build(indexName);
 
             return Ok();
         }

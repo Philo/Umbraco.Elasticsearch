@@ -1,16 +1,24 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+using System.Web.Routing;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
+using Umbraco.Core.Configuration.Dashboard;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Publishing;
 using Umbraco.Core.Services;
 using Umbraco.Core.Sync;
+using Umbraco.Elasticsearch.Core.Admin.Api;
 using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Web;
 using Umbraco.Web.Cache;
+using Umbraco.Web.UI.JavaScript;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
@@ -37,6 +45,11 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             MediaService.Deleted += MediaServiceOnDeleted;
         }
 
+        protected override void ApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
+        {
+            InstallServerVars();
+        }
+
         protected override void ApplicationInitialized(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
             LogHelper.Info<SearchApplicationEventHandler<TSearchSettings>>(() => "Initialising configuration for Elasticsearch integration");
@@ -55,8 +68,10 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                 UmbracoSearchFactory.RegisterMediaIndexService(service, service.ShouldIndex);
             }
 
-            var manager = new IndexManager();
-            manager.Create();
+            /*
+                var manager = new IndexManager();
+                manager.Create(); 
+            */
         }
 
         #region Event Handlers
@@ -108,6 +123,34 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                     IndexContentCore(new[] { content }, null);
                 }
             }
+        }
+
+        private void InstallServerVars()
+        {
+            ServerVariablesParser.Parsing += (sender, serverVars) =>
+            {
+                if (!serverVars.ContainsKey("umbracoUrls"))
+                    throw new Exception("Missing umbracoUrls.");
+                var umbracoUrlsObject = serverVars["umbracoUrls"];
+                if (umbracoUrlsObject == null)
+                    throw new Exception("Null umbracoUrls");
+                var umbracoUrls = umbracoUrlsObject as Dictionary<string, object>;
+                if (umbracoUrls == null)
+                    throw new Exception("Invalid umbracoUrls");
+
+                if (HttpContext.Current == null) throw new InvalidOperationException("HttpContext is null");
+                var urlHelper = new UrlHelper(new RequestContext(new HttpContextWrapper(HttpContext.Current), new RouteData()));
+
+                umbracoUrls["umbElasticsearchApiUrl"] = urlHelper.GetUmbracoApiServiceBaseUrl<SearchApiController>(controller => controller.IndicesInfo());
+
+                if (!serverVars.ContainsKey("umbracoPlugins"))
+                    throw new Exception("Missing umbracoPlugins.");
+                var umbracoPlugins = serverVars["umbracoPlugins"] as Dictionary<string, object>;
+                if (umbracoPlugins == null)
+                    throw new Exception("Invalid umbracoPlugins");
+
+                umbracoPlugins["umbElasticsearch"] = SearchSettings<TSearchSettings>.Current;
+            };
         }
 
         #endregion

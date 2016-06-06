@@ -30,35 +30,35 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
 
         protected ContentIndexService() : this(UmbracoSearchFactory.Client, UmbracoSearchFactory.Repository, UmbracoContext.Current) { }
 
-        public void Index(IContent content)
+        public void Index(IContent content, string indexName = null)
         {
             if (content.Published)
             {
                 var doc = CreateCore(content);
-                IndexCore(_repository, doc);
+                IndexCore(_repository, doc, indexName);
             }
             else
             {
-                Remove(content);
+                Remove(content, indexName);
             }
         }
 
-        protected virtual void IndexCore(IElasticsearchRepository repository, TUmbracoDocument document)
+        protected virtual void IndexCore(IElasticsearchRepository repository, TUmbracoDocument document, string indexName = null)
         {
-            repository.Save(document);
+            repository.Save(document, indexName);
         }
 
-        public void Remove(IContent content)
+        public void Remove(IContent content, string indexName)
         {
-            RemoveCore(_repository, content);
+            RemoveCore(_repository, content, indexName);
         }
 
-        protected virtual void RemoveCore(IElasticsearchRepository repository, IContent content)
+        protected virtual void RemoveCore(IElasticsearchRepository repository, IContent content, string indexName = null)
         {
             // this might be flawed if the document id isnt the node id
-            if (repository.Exists<TUmbracoDocument>(content.Id.ToString()))
+            if (repository.Exists<TUmbracoDocument>(content.Id.ToString(), indexName))
             {
-                repository.Delete<TUmbracoDocument>(content.Id.ToString());
+                repository.Delete<TUmbracoDocument>(content.Id.ToString(), indexName);
             }
         }
 
@@ -77,28 +77,33 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
             return content.ContentType.Alias.Equals(IndexTypeName, StringComparison.CurrentCultureIgnoreCase);
         }
 
-        public void UpdateIndexTypeMapping()
+        public void UpdateIndexTypeMapping(string indexName)
         {
-            var mapping = _client.GetMapping<TUmbracoDocument>();
+            var mapping = _client.GetMapping<TUmbracoDocument>(m => m.Index(indexName));
             if (mapping.Mapping == null && !mapping.Mappings.Any())
             {
-                UpdateIndexTypeMappingCore(_client);
+                UpdateIndexTypeMappingCore(_client, indexName);
                 LogHelper.Info<ContentIndexService<TUmbracoDocument>>(() => $"Updated content type mapping for '{typeof(TUmbracoDocument).Name}' using type name '{InitialiseIndexTypeName()}'");
             }
         }
 
-        public void ClearIndexType()
+        public void ClearIndexType(string indexName)
         {
-            _repository.Query(new DeleteAllOfDocumentTypeQuery<TUmbracoDocument>());
-            UpdateIndexTypeMapping();
+            _repository.Query(new DeleteAllOfDocumentTypeQuery<TUmbracoDocument>(), indexName);
+            UpdateIndexTypeMapping(indexName);
         }
+
+        public string EntityTypeName { get; } = typeof (TUmbracoDocument).Name;
+
+        public string DocumentTypeName { get; } =
+            typeof (TUmbracoDocument).GetCustomAttribute<ElasticTypeAttribute>().Name;
 
         protected virtual void Create(TUmbracoDocument doc, IContent content)
         {
 
         }
 
-        protected abstract void UpdateIndexTypeMappingCore(IElasticClient client);
+        protected abstract void UpdateIndexTypeMappingCore(IElasticClient client, string indexName);
 
         private TUmbracoDocument CreateCore(IContent contentInstance)
         {

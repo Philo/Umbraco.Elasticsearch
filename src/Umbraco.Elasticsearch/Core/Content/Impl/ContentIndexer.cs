@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Threading.Tasks;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
 using Umbraco.Web;
@@ -20,34 +21,36 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
             return UmbracoSearchFactory.GetContentIndexService(content);
         }
 
-        public void Build()
+        public void Build(string indexName)
         {
-            foreach (var node in _contentService.GetRootContent())
+            Parallel.ForEach(_contentService.GetRootContent(), node => Publish(node, indexName, true));
+            /*foreach (var node in _contentService.GetRootContent())
             {
-                Publish(node, true);
-            }
+                Publish(node, indexName, true);
+            }*/
         }
 
-        private void Publish(IContent contentInstance, bool isRecursive = false)
+        private void Publish(IContent contentInstance, string indexName, bool isRecursive = false)
         {
             if (contentInstance != null)
             {
                 var indexService = IndexServiceFor(contentInstance);
                 if (indexService?.IsExcludedFromIndex(contentInstance) ?? false)
                 {
-                    indexService.Remove(contentInstance);
+                    indexService.Remove(contentInstance, indexName);
                 }
                 else
                 {
-                    indexService?.Index(contentInstance);
+                    indexService?.Index(contentInstance, indexName);
                 }
 
                 if (isRecursive && contentInstance.Children().Any())
                 {
-                    foreach (var child in contentInstance.Children())
-                    {
-                        Publish(child, true);
-                    }
+                    Parallel.ForEach(contentInstance.Children(), child => Publish(child, indexName, true));
+                    //foreach (var child in contentInstance.Children())
+                    //{
+                    //    Publish(child, indexName, true);
+                    //}
                 }
             }
         }

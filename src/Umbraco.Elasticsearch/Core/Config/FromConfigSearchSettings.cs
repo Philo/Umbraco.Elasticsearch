@@ -5,7 +5,7 @@ namespace Umbraco.Elasticsearch.Core.Config
 {
     public class FromConfigSearchSettings : ISearchSettings
     {
-        private const string Prefix = "SearchSettings:";
+        private const string Prefix = "umbElasticsearch:";
 
         public string Host => nameof(Host).FromAppSettingsWithPrefix(Prefix, "http://localhost:9200");
 
