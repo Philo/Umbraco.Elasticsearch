@@ -14,9 +14,6 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
             strategy.Create(new AliasedIndexContributor(activate));
             LogHelper.Info<IndexManager>(() => $"Search index '{indexName}' has been created (activate: {activate})");
-
-            Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping(indexName));
-            Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping(indexName));
         }
     }
 
@@ -50,6 +47,9 @@ namespace Umbraco.Elasticsearch.Core.Impl
                     .Add(aa => aa.Alias(indexName).Index(_timestampedIndexName))
                     );
             }
+            Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping(_timestampedIndexName));
+            Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping(_timestampedIndexName));
+
         }
     }
 

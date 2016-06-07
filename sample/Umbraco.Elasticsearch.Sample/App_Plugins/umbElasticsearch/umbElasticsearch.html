@@ -3,13 +3,14 @@
         <p style="font-style: italic; color: red">The Elasticsearch integration is not active</p>
 
         <p>Please see the integration instructions for further information</p>
+        <hr/>
     </div>
     <div class="tab-content" data-ng-show="settings">
         <fieldset>
             <legend>Index information</legend>
             <div class="umb-sub-header">
                 <button class="btn btn-info btn-icon" data-ng-click="refreshIndexLIst()"><i class="icon icon-refresh"></i> Refresh</button>
-                <button class="btn btn-warning btn-icon" data-ng-click="addIndex()"><i class="icon icon-add"></i> Add Index</button>
+                <button data-ng-disabled="busy" class="btn btn-warning btn-icon" data-ng-click="addIndex()"><i class="icon icon-add"></i> Add Index</button>
             </div>
 
             <div class="umb-tab-pane-inner">

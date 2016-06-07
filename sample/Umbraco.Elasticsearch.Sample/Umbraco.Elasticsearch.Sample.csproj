@@ -329,7 +329,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Plugins\umbElasticsearch\instructions.html" />
     <Content Include="App_Plugins\umbElasticsearch\umbElasticsearch.controller.js" />
     <Content Include="App_Plugins\umbElasticsearch\umbElasticsearch.html" />
     <None Include="App_Plugins\umbElasticsearch\umbElasticsearch.resource.js" />

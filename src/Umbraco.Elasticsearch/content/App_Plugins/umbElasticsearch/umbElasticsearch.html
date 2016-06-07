@@ -3,13 +3,14 @@
         <p style="font-style: italic; color: red">The Elasticsearch integration is not active</p>
 
         <p>Please see the integration instructions for further information</p>
+        <hr />
     </div>
     <div class="tab-content" data-ng-show="settings">
         <fieldset>
             <legend>Index information</legend>
             <div class="umb-sub-header">
                 <button class="btn btn-info btn-icon" data-ng-click="refreshIndexLIst()"><i class="icon icon-refresh"></i> Refresh</button>
-                <button class="btn btn-warning btn-icon" data-ng-click="addIndex()"><i class="icon icon-add"></i> Add Index</button>
+                <button data-ng-disabled="busy" class="btn btn-warning btn-icon" data-ng-click="addIndex()"><i class="icon icon-add"></i> Add Index</button>
             </div>
 
             <div class="umb-tab-pane-inner">
@@ -25,29 +26,29 @@
                             </tr>
                         </thead>
                         <tbody>
-                        <tr data-ng-hide="info">
-                            <td colspan="5" style="text-align: center; background-color: khaki">
-                                <span style="font-style: italic; text-align: center">Unable to find indices matching known index pattern, use the <strong>add index</strong> option</span>
-                            </td>
-                        </tr>
-                        <tr data-ng-show="info" ng-repeat="item in info track by $index" data-ng-style="item.Status == 'Active' ? {'font-weight': 'bold'} : {}">
-                            <td ng-bind="item.Name"></td>
-                            <td ng-bind="item.DocCount"></td>
-                            <td ng-bind="item.Queries"></td>
-                            <td><span class="text-success" ng-bind="item.Status"></span></td>
-                            <td>
-                                <div>
-                                    <span data-ng-show="item.Status != 'Active'">
+                            <tr data-ng-hide="info">
+                                <td colspan="5" style="text-align: center; background-color: khaki">
+                                    <span style="font-style: italic; text-align: center">Unable to find indices matching known index pattern, use the <strong>add index</strong> option</span>
+                                </td>
+                            </tr>
+                            <tr data-ng-show="info" ng-repeat="item in info track by $index" data-ng-style="item.Status == 'Active' ? {'font-weight': 'bold'} : {}">
+                                <td ng-bind="item.Name"></td>
+                                <td ng-bind="item.DocCount"></td>
+                                <td ng-bind="item.Queries"></td>
+                                <td><span class="text-success" ng-bind="item.Status"></span></td>
+                                <td>
+                                    <div>
+                                        <span data-ng-show="item.Status != 'Active'">
                                             <button data-ng-disabled="busy" data-ng-click="activateIndex(item.Name)" class="btn btn-small btn-primary">Activate</button>
                                             <button data-ng-disabled="busy" data-ng-click="rebuildContentIndex(item.Name)" class="btn btn-small btn-primary">Build Content</button>
                                             <button data-ng-disabled="busy" data-ng-click="rebuildMediaIndex(item.Name)" class="btn btn-small btn-primary">Build Media</button>
                                         </span>
-                                    <span data-ng-hide="item.Status == 'Active'">
+                                        <span data-ng-hide="item.Status == 'Active'">
                                             <button data-ng-disabled="busy" data-ng-click="deleteIndex(item.Name)" class="btn btn-small btn-danger">Delete</button>
                                         </span>
-                                </div>
-                            </td>
-                        </tr>
+                                    </div>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -68,8 +69,9 @@
             <legend>Active Content Services</legend>
             <span data-ng-hide="contentServices" style="font-style: italic">No media indexing services registered</span>
             <ul data-ng-show="contentServices">
-                <li data-ng-repeat="service in contentServices"><strong>{{service.DocumentTypeName
-}}</strong> via <strong>{{service.Name}}</strong></li>
+                <li data-ng-repeat="service in contentServices">
+                    <strong>{{service.DocumentTypeName}}</strong> via <strong>{{service.Name}}</strong>
+                </li>
             </ul>
         </fieldset>
         <fieldset>

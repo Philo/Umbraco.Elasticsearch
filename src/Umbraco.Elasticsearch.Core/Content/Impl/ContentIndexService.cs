@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using Nest;
 using Nest.Queryify.Abstractions;
 using umbraco;
@@ -45,6 +46,7 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
 
         protected virtual void IndexCore(IElasticsearchRepository repository, TUmbracoDocument document, string indexName = null)
         {
+            Thread.Sleep(4000);
             repository.Save(document, indexName);
         }
 
