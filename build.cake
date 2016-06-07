@@ -182,11 +182,15 @@ Task("Package-Umbraco-Elasticsearch")
             Tags = new[] { "Umbraco", "Elasticsearch" },
             Files = new[] {
                 new NuSpecContent { Source = "Umbraco.Elasticsearch.dll", Target = "lib/net452" },
+
                 new NuSpecContent { Source = "content/web.config.install.xdt", Target = "content" },
                 new NuSpecContent { Source = "content/web.config.uninstall.xdt", Target = "content" },
                 new NuSpecContent { Source = "content/dashboard.config.install.xdt", Target = "content/config" },
                 new NuSpecContent { Source = "content/dashboard.config.uninstall.xdt", Target = "content/config" },
+
                 new NuSpecContent { Source = "content/UmbracoElasticsearchStartup.cs.pp", Target = "content" },
+
+                new NuSpecContent { Source = "content/App_Plugins/umbElasticsearch/**/*", Target = "" }
             },
             Dependencies = new [] {
                 new NuSpecDependency { Id = "Nest.Indexify", Version = "0.3.1" },
