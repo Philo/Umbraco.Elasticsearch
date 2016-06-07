@@ -23,11 +23,10 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
 
         public void Build(string indexName)
         {
-            Parallel.ForEach(_contentService.GetRootContent(), node => Publish(node, indexName, true));
-            /*foreach (var node in _contentService.GetRootContent())
+            foreach (var node in _contentService.GetRootContent())
             {
                 Publish(node, indexName, true);
-            }*/
+            }
         }
 
         private void Publish(IContent contentInstance, string indexName, bool isRecursive = false)
@@ -46,11 +45,10 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
 
                 if (isRecursive && contentInstance.Children().Any())
                 {
-                    Parallel.ForEach(contentInstance.Children(), child => Publish(child, indexName, true));
-                    //foreach (var child in contentInstance.Children())
-                    //{
-                    //    Publish(child, indexName, true);
-                    //}
+                    foreach (var child in contentInstance.Children())
+                    {
+                        Publish(child, indexName, true);
+                    }
                 }
             }
         }

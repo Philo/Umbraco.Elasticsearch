@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{28C290DF-1357-4DE1-8947-B7B65017F766}</ProjectGuid>
+    <ProjectGuid>{03764FFB-42FC-4613-81D8-C1BF4F27C144}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Umbraco.Elasticsearch</RootNamespace>
-    <AssemblyName>Umbraco.Elasticsearch</AssemblyName>
+    <RootNamespace>Umbraco.Elasticsearch.Core</RootNamespace>
+    <AssemblyName>Umbraco.Elasticsearch.Core</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -23,8 +23,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>
-    </DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -176,7 +174,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Semver, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\semver.1.1.2\lib\net451\Semver.dll</HintPath>
+      <HintPath>..\..\packages\semver.1.1.2\lib\net45\Semver.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="SQLCE4Umbraco, Version=1.0.5876.30926, Culture=neutral, processorArchitecture=MSIL">
@@ -184,7 +182,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <HintPath>..\..\packages\UmbracoCms.Core.7.3.7\lib\System.Data.SqlServerCe.dll</HintPath>
@@ -302,31 +300,37 @@
     <Compile Include="..\..\VersionAssemblyInfo.cs">
       <Link>Properties\VersionAssemblyInfo.cs</Link>
     </Compile>
-    <None Include="content\UmbracoElasticsearchStartup.cs.pp" />
-    <Compile Include="Admin\Api\SearchApiController.cs" />
-    <Compile Include="Admin\Events\SearchApplicationInstallServerVarsEventHandler.cs" />
+    <Compile Include="Config\DefaultIndexNameResolver.cs" />
+    <Compile Include="Config\FromConfigSearchSettings.cs" />
+    <Compile Include="Config\ISearchIndexNameResolver.cs" />
+    <Compile Include="Config\ISearchSettings.cs" />
+    <Compile Include="Config\SearchSettings.cs" />
+    <Compile Include="Content\IContentIndexService.cs" />
+    <Compile Include="Content\Impl\ContentIndexer.cs" />
+    <Compile Include="Content\Impl\ContentIndexService.cs" />
+    <Compile Include="EventHandlers\SearchApplicationEventHandler_Base.cs" />
+    <Compile Include="EventHandlers\SearchApplicationEventHandler_Configure.cs" />
+    <Compile Include="EventHandlers\SearchApplicationEventHandler_Content.cs" />
+    <Compile Include="EventHandlers\SearchApplicationEventHandler_Media.cs" />
+    <Compile Include="IEntityIndexer.cs" />
+    <Compile Include="IIndexManager.cs" />
+    <Compile Include="IIndexService.cs" />
+    <Compile Include="Impl\IndexManager.cs" />
+    <Compile Include="IUmbracoDocument.cs" />
+    <Compile Include="Media\IMediaIndexService.cs" />
+    <Compile Include="Media\Impl\MediaIndexer.cs" />
+    <Compile Include="Media\Impl\MediaIndexService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Queries\DeleteAllOfDocumentTypeQuery.cs" />
+    <Compile Include="Config\Settings.cs" />
+    <Compile Include="UmbracoDocument.cs" />
+    <Compile Include="UmbracoSearchFactory.cs" />
+    <Compile Include="Utils\ConfigurationManagerUtils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="content\App_Plugins\umbElasticsearch\umbElasticsearch.controller.js" />
-    <None Include="content\App_Plugins\umbElasticsearch\umbElasticsearch.html" />
-    <None Include="content\App_Plugins\umbElasticsearch\umbElasticsearch.resource.js" />
     <None Include="app.config" />
-    <None Include="content\App_Plugins\umbElasticsearch\package.manifest" />
-    <None Include="content\dashboard.config.uninstall.xdt" />
-    <None Include="content\dashboard.config.install.xdt" />
-    <None Include="content\web.config.install.xdt" />
-    <None Include="content\web.config.uninstall.xdt" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Umbraco.Elasticsearch.nuspec" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Umbraco.Elasticsearch.Core\Umbraco.Elasticsearch.Core.csproj">
-      <Project>{03764ffb-42fc-4613-81d8-c1bf4f27c144}</Project>
-      <Name>Umbraco.Elasticsearch.Core</Name>
-    </ProjectReference>
+    <None Include="packages.config" />
+    <None Include="Umbraco.Elasticsearch.Core.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets" Condition="Exists('..\..\packages\Microsoft.Bcl.Build.1.0.21\build\Microsoft.Bcl.Build.targets')" />

@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sample", "sample", "{2DB6DC
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Elasticsearch.Sample", "sample\Umbraco.Elasticsearch.Sample\Umbraco.Elasticsearch.Sample.csproj", "{1F4215B0-B63A-4955-918F-0B1BB837675E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco.Elasticsearch.Core", "src\Umbraco.Elasticsearch.Core\Umbraco.Elasticsearch.Core.csproj", "{03764FFB-42FC-4613-81D8-C1BF4F27C144}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,6 +27,10 @@ Global
 		{1F4215B0-B63A-4955-918F-0B1BB837675E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F4215B0-B63A-4955-918F-0B1BB837675E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F4215B0-B63A-4955-918F-0B1BB837675E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03764FFB-42FC-4613-81D8-C1BF4F27C144}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03764FFB-42FC-4613-81D8-C1BF4F27C144}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03764FFB-42FC-4613-81D8-C1BF4F27C144}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03764FFB-42FC-4613-81D8-C1BF4F27C144}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -32,5 +38,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{28C290DF-1357-4DE1-8947-B7B65017F766} = {324151CA-EC47-45E8-9B42-BDDC385BF2A6}
 		{1F4215B0-B63A-4955-918F-0B1BB837675E} = {2DB6DC6B-C2DF-4657-8DD4-903397EC522D}
+		{03764FFB-42FC-4613-81D8-C1BF4F27C144} = {324151CA-EC47-45E8-9B42-BDDC385BF2A6}
 	EndGlobalSection
 EndGlobal

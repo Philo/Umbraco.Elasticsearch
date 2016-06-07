@@ -1,6 +1,6 @@
 ﻿using Umbraco.Elasticsearch.Utils;
 
-namespace Umbraco.Elasticsearch
+namespace Umbraco.Elasticsearch.Core.Config
 {
     public class Settings
     {

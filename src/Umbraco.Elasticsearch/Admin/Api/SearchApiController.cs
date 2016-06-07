@@ -3,14 +3,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Web.Http;
 using Nest;
-using Umbraco.Elasticsearch.Core.Config;
+using Umbraco.Elasticsearch.Core;
 using Umbraco.Elasticsearch.Core.Content.Impl;
 using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Media.Impl;
 using Umbraco.Web.Editors;
 using Umbraco.Web.Mvc;
 
-namespace Umbraco.Elasticsearch.Core.Admin.Api
+namespace Umbraco.Elasticsearch.Admin.Api
 {
     [PluginController("umbElasticsearch")]
     public class SearchApiController : UmbracoAuthorizedJsonController

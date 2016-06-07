@@ -7,10 +7,11 @@ using Nest.Indexify;
 using Nest.Queryify.Abstractions;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
+using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.Media;
 
-namespace Umbraco.Elasticsearch
+namespace Umbraco.Elasticsearch.Core
 {
     public static class UmbracoSearchFactory
     {

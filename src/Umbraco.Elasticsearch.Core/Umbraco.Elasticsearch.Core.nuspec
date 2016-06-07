@@ -12,16 +12,5 @@
     <description>$description$</description>
     <tags>Umbraco Elasticsearch search</tags>
   </metadata>
-  <files>
-    <file src="content\App_Plugins\umbElasticsearch\**\*" target="content\App_Plugins\umbElasticsearch" />
-
-    <!-- transforms -->
-    <file src="content\web.config.install.xdt" target="content" />
-    <file src="content\web.config.uninstall.xdt" target="content" />
-    <file src="content\dashboard.config.install.xdt" target="content\config" />
-    <file src="content\dashboard.config.uninstall.xdt" target="content\config" />
-
-    <file src="content\UmbracoElasticsearchStartup.cs.pp" target="content" />
-    
-  </files>
+  
 </package>

@@ -33,8 +33,6 @@ GitVersion versionInfo                      = null;
 //////////////////////////////////////////////////////////////////////
 
 Setup(() => {
-    CreateDirectory(artifacts);
-    
     if(!FileExists(solutionPath)) throw new Exception(string.Format("Solution file not found - {0}", solutionPath.ToString()));
     solution = ParseSolution(solutionPath.ToString());
 
@@ -49,7 +47,10 @@ Setup(() => {
 Task("Clean")
     .Does(() =>
 {
-    CleanDirectory(artifacts);
+    CleanDirectories(artifacts.ToString());
+    CreateDirectory(artifacts);
+    CreateDirectory(buildOutput);
+    
     var binDirs = GetDirectories(solutionPath.GetDirectory() +@"\src\**\bin");
     var objDirs = GetDirectories(solutionPath.GetDirectory() +@"\src\**\obj");
     CleanDirectories(binDirs);
@@ -106,22 +107,119 @@ Task("Build")
     );
 });
 
-Task("Package")
+Task("Copy-Files-Umbraco-Elasticsearch")
     .IsDependentOn("Build")
     .Does(() => 
 {
-    foreach(var nugetProjectPath in nugetProjectPaths) {
+    EnsureDirectoryExists(buildOutput +"/Umbraco.Elasticsearch");
+    CopyFile("./src/Umbraco.Elasticsearch/bin/" +configuration +"/Umbraco.Elasticsearch.dll", buildOutput +"/Umbraco.Elasticsearch/Umbraco.Elasticsearch.dll");
+    CopyDirectory("./src/Umbraco.Elasticsearch/content", buildOutput +"/Umbraco.Elasticsearch/content");
+});
+
+Task("Copy-Files-Umbraco-Elasticsearch-Core")
+    .IsDependentOn("Build")
+    .Does(() => 
+{
+    EnsureDirectoryExists(buildOutput +"/Umbraco.Elasticsearch.Core");
+    CopyFile("./src/Umbraco.Elasticsearch.Core/bin/" +configuration +"/Umbraco.Elasticsearch.Core.dll", buildOutput +"/Umbraco.Elasticsearch.Core/Umbraco.Elasticsearch.Core.dll");
+});
+
+Task("Package-Umbraco-Elasticsearch-Core")
+    .IsDependentOn("Build")
+    .IsDependentOn("Copy-Files-Umbraco-Elasticsearch-Core")
+    .Does(() => 
+{
         var settings = new NuGetPackSettings {
+            BasePath = buildOutput +"/Umbraco.Elasticsearch.Core",
+            Id = "Umbraco.Elasticsearch.Core",
+            Authors = new [] { "Phil Oyston" },
+            Owners = new [] {"Phil Oyston", "Storm ID" },
+            Description = "Provides integration between Umbraco content and media, and Elasticsearch as a search platform",
+            LicenseUrl = new Uri("https://raw.githubusercontent.com/Philo/Umbraco.Elasticsearch/master/LICENSE"),
+            ProjectUrl = new Uri("https://github.com/Philo/Umbraco.Elasticsearch"),
+            IconUrl = new Uri("https://raw.githubusercontent.com/Philo/Umbraco.Elasticsearch/master/lib/icons/umbraco-es.png"),
+            RequireLicenseAcceptance = false,
             Properties = new Dictionary<string, string> { { "Configuration", configuration }},
-            Symbols = true,
+            Symbols = false,
             NoPackageAnalysis = true,
             Version = versionInfo.NuGetVersionV2,
             OutputDirectory = artifacts,
-            IncludeReferencedProjects = true
+            IncludeReferencedProjects = true,
+            Tags = new[] { "Umbraco", "Elasticsearch" },
+            Files = new[] {
+                new NuSpecContent { Source = "Umbraco.Elasticsearch.Core.dll", Target = "lib/net452" },
+            },
+            Dependencies = new [] {
+                new NuSpecDependency { Id = "Nest.Indexify", Version = "0.3.1" },
+                new NuSpecDependency { Id = "Nest.Searchify", Version = "0.9.1" },
+                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "7.2.0" }
+            }
         };
-        NuGetPack(nugetProjectPath, settings);                     
-    }
+        NuGetPack("./src/Umbraco.Elasticsearch.Core/Umbraco.Elasticsearch.Core.nuspec", settings);                     
 });
+
+Task("Package-Umbraco-Elasticsearch")
+    .IsDependentOn("Build")
+    .IsDependentOn("Copy-Files-Umbraco-Elasticsearch")
+    .Does(() => 
+{
+        var settings = new NuGetPackSettings {
+            BasePath = buildOutput +"/Umbraco.Elasticsearch",
+            Id = "Umbraco.Elasticsearch",
+            Authors = new [] { "Phil Oyston" },
+            Owners = new [] {"Phil Oyston", "Storm ID" },
+            Description = "Provides integration between Umbraco content and media, and Elasticsearch as a search platform",
+            LicenseUrl = new Uri("https://raw.githubusercontent.com/Philo/Umbraco.Elasticsearch/master/LICENSE"),
+            ProjectUrl = new Uri("https://github.com/Philo/Umbraco.Elasticsearch"),
+            IconUrl = new Uri("https://raw.githubusercontent.com/Philo/Umbraco.Elasticsearch/master/lib/icons/umbraco-es.png"),
+            RequireLicenseAcceptance = false,
+            Properties = new Dictionary<string, string> { { "Configuration", configuration }},
+            Symbols = false,
+            NoPackageAnalysis = true,
+            Version = versionInfo.NuGetVersionV2,
+            OutputDirectory = artifacts,
+            IncludeReferencedProjects = true,
+            Tags = new[] { "Umbraco", "Elasticsearch" },
+            Files = new[] {
+                new NuSpecContent { Source = "Umbraco.Elasticsearch.dll", Target = "lib/net452" },
+                new NuSpecContent { Source = "content/web.config.install.xdt", Target = "content" },
+                new NuSpecContent { Source = "content/web.config.uninstall.xdt", Target = "content" },
+                new NuSpecContent { Source = "content/dashboard.config.install.xdt", Target = "content/config" },
+                new NuSpecContent { Source = "content/dashboard.config.uninstall.xdt", Target = "content/config" },
+                new NuSpecContent { Source = "content/UmbracoElasticsearchStartup.cs.pp", Target = "content" },
+            },
+            Dependencies = new [] {
+                new NuSpecDependency { Id = "Nest.Indexify", Version = "0.3.1" },
+                new NuSpecDependency { Id = "Nest.Searchify", Version = "0.9.1" },
+                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "7.2.0" },
+                new NuSpecDependency { Id = "Umbraco.Elasticsearch.Core", Version = "[" +versionInfo.NuGetVersionV2 +"]" }
+            }
+        };
+        NuGetPack("./src/Umbraco.Elasticsearch/Umbraco.Elasticsearch.nuspec", settings);                     
+});
+
+Task("Package")
+    .IsDependentOn("Build")
+    .IsDependentOn("Package-Umbraco-Elasticsearch")
+    .IsDependentOn("Package-Umbraco-Elasticsearch-Core")
+    .Does(() => { });
+
+// Task("Package")
+//     .IsDependentOn("Build")
+//     .Does(() => 
+// {
+//     foreach(var nugetProjectPath in nugetProjectPaths) {
+//         var settings = new NuGetPackSettings {
+//             Properties = new Dictionary<string, string> { { "Configuration", configuration }},
+//             Symbols = true,
+//             NoPackageAnalysis = true,
+//             Version = versionInfo.NuGetVersionV2,
+//             OutputDirectory = artifacts,
+//             IncludeReferencedProjects = true
+//         };
+//         NuGetPack(nugetProjectPath, settings);                     
+//     }
+// });
 
 /*
  * TODO : erm, unit tests

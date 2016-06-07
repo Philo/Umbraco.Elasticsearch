@@ -1,16 +1,9 @@
 ﻿using Nest;
 using Umbraco.Core.Models;
-using Umbraco.Elasticsearch.Core;
 using Umbraco.Elasticsearch.Core.Content.Impl;
 
 namespace Umbraco.Elasticsearch.Sample.Features.Search
 {
-    [ElasticType(Name = "dtArticle", IdProperty = "Id")]
-    public class ArticleDocument : UmbracoDocument
-    {
-        
-    }
-
     public class ArticleContentIndexService : ContentIndexService<ArticleDocument>
     {
         protected override void UpdateIndexTypeMappingCore(IElasticClient client, string indexName)

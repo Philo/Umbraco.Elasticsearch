@@ -1,27 +1,27 @@
 ﻿function umbElasticsearchController($log, $scope, $timeout, notificationsService, searchResource) {
-    $scope.deleteIndex = function (indexName) {
+    $scope.deleteIndex = function(indexName) {
         $scope.busy = true;
-        return searchResource.deleteIndexByName(indexName).then(function () {
+        return searchResource.deleteIndexByName(indexName).then(function() {
             $scope.getIndicesInfo();
             $scope.busy = false;
         });
-    }
+    };
 
-    $scope.buildIndex = function (indexName) {
+    $scope.buildIndex = function(indexName) {
         $scope.busy = true;
-        return searchResource.buildIndexByName(indexName).then(function () {
+        return searchResource.buildIndexByName(indexName).then(function() {
             $scope.getIndicesInfo();
             $scope.busy = false;
         });
-    }
+    };
 
-    $scope.activateIndex = function (indexName) {
+    $scope.activateIndex = function(indexName) {
         $scope.busy = true;
-        return searchResource.activateIndexByName(indexName).then(function () {
+        return searchResource.activateIndexByName(indexName).then(function() {
             $scope.getIndicesInfo();
             $scope.busy = false;
         });
-    }
+    };
 
     $scope.getIndicesInfo = function () {
         $scope.busy = true;
@@ -31,41 +31,41 @@
         });
     };
 
-    $scope.rebuildContentIndex = function (indexName) {
+    $scope.rebuildContentIndex = function(indexName) {
         $scope.busy = true;
         notificationsService.success('Rebuilding Content Index', 'Content Index rebuild has started');
-        searchResource.rebuildContentIndex(indexName).then(function () {
-            $timeout(function () {
+        searchResource.rebuildContentIndex(indexName).then(function() {
+            $timeout(function() {
                 $scope.busy = false;
                 notificationsService.success("Content Index Rebuild", "Content Index rebuild completed");
                 $scope.getIndicesInfo();
             }, 5000);
-        }, function () {
+        }, function() {
             $scope.busy = false;
             notificationsService.error("Content Index Rebuild", "Content Index Rebuild Failed");
             $scope.getIndicesInfo();
         });
-    }
+    };
 
-    $scope.rebuildMediaIndex = function (indexName) {
+    $scope.rebuildMediaIndex = function(indexName) {
         $scope.busy = true;
         notificationsService.success('Rebuilding Media Index', 'Media Index rebuild has started');
-        searchResource.rebuildMediaIndex(indexName).then(function () {
-            $timeout(function () {
+        searchResource.rebuildMediaIndex(indexName).then(function() {
+            $timeout(function() {
                 $scope.busy = false;
                 notificationsService.success("Media Index Rebuild", "Index rebuild completed");
                 $scope.getIndicesInfo();
             }, 5000);
-        }, function () {
+        }, function() {
             $scope.busy = false;
             notificationsService.error("Media Index Rebuild", "Media Index Rebuild Failed");
             $scope.getIndicesInfo();
         });
-    }
+    };
 
-    $scope.refreshIndexLIst = function () {
+    $scope.refreshIndexLIst = function() {
         $scope.getIndicesInfo();
-    }
+    };
 
     function addIndex() {
         $scope.busy = true;
@@ -85,13 +85,13 @@
         searchResource.getContentIndexServices().then(function(data) {
             $scope.contentServices = data.data;
         });
-    }
+    };
 
-    $scope.getMediaServicesList = function () {
-        searchResource.getMediaIndexServices().then(function (data) {
+    $scope.getMediaServicesList = function() {
+        searchResource.getMediaIndexServices().then(function(data) {
             $scope.mediaServices = data.data;
         });
-    }
+    };
 
     $scope.busy = false;
     $scope.addIndex = addIndex;
@@ -101,6 +101,7 @@
         $scope.settings = searchResource.getSettings();
         $log.info('settings', $scope.settings);
         if ($scope.settings) {
+            $scope.getIndicesInfo();
             $scope.getContentServicesList();
             $scope.getMediaServicesList();
         }

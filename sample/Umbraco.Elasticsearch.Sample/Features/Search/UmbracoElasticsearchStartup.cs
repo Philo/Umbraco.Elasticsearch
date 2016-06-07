@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Nest;
 using Nest.Indexify;
 using Nest.Indexify.Contributors.Analysis.English;
@@ -7,23 +8,23 @@ using Nest.Indexify.Contributors.IndexSettings;
 using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.EventHandlers;
+using Umbraco.Elasticsearch.Core.Media;
 
 namespace Umbraco.Elasticsearch.Sample.Features.Search
 {
-    public class UmbracoStartup : SearchApplicationEventHandler
+    public class UmbracoElasticsearchStartup : SearchApplicationEventHandler
     {
         protected override IElasticClient ConfigureElasticClient(FromConfigSearchSettings searchSettings)
         {
             var indexResolver = new DefaultIndexNameResolver();
             var indexName = indexResolver.Resolve(searchSettings, searchSettings.IndexName);
             var connection = new ConnectionSettings(new Uri(searchSettings.Host), indexName);
-            connection.EnableTrace();
             return new ElasticClient(connection);
         }
 
         protected override IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client)
         {
-            return new IndexCreationStrategy(client);
+            return new UmbracoElasticsearchIndexCreationStrategy(client);
         }
 
         protected override IEnumerable<IContentIndexService> RegisterContentIndexingServices()
@@ -31,13 +32,19 @@ namespace Umbraco.Elasticsearch.Sample.Features.Search
             yield return new ArticleContentIndexService();
         }
 
-        private class IndexCreationStrategy : ElasticsearchIndexCreationStrategy
+        protected override IEnumerable<IMediaIndexService> RegisterMediaIndexingServices()
         {
-            public IndexCreationStrategy(IElasticClient client) : base(client)
+            return Enumerable.Empty<IMediaIndexService>();
+        }
+
+        internal class UmbracoElasticsearchIndexCreationStrategy : ElasticsearchIndexCreationStrategy
+        {
+            public UmbracoElasticsearchIndexCreationStrategy(IElasticClient client) : base(client)
             {
                 AddContributor(new EnglishIndexAnalysisContributor());
                 AddContributor(new IndexSettingsContributor(1, 1));
             }
         }
     }
+
 }
