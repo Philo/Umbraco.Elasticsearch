@@ -44,7 +44,8 @@ namespace Umbraco.Elasticsearch.Admin.Api
             return Ok(content.Select(x => new
             {
                 x.DocumentTypeName,
-                x.GetType().Name
+                x.GetType().Name,
+                Count = x.CountOfDocumentsForIndex(UmbracoSearchFactory.Client.Infer.DefaultIndex)
             }));
         }
 

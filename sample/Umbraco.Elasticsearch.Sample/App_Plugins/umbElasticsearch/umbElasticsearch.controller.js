@@ -19,6 +19,8 @@
         $scope.busy = true;
         return searchResource.activateIndexByName(indexName).then(function () {
             $scope.getIndicesInfo();
+            $scope.getContentServicesList();
+            $scope.getMediaServicesList();
             $scope.busy = false;
         });
     };
@@ -62,7 +64,7 @@
         });
     };
 
-    $scope.refreshIndexLIst = function () {
+    $scope.refreshIndexList = function () {
         $scope.getIndicesInfo();
     };
 

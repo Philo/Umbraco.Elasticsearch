@@ -89,6 +89,15 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
 
         public string EntityTypeName => typeof(TMediaDocument).Name;
         public string DocumentTypeName { get; } = typeof(TMediaDocument).GetCustomAttribute<ElasticTypeAttribute>().Name;
+        public long CountOfDocumentsForIndex(string indexName)
+        {
+            var response = _repository.Query(new CountOfDocsForTypeQuery(DocumentTypeName), indexName);
+            if (response.IsValid)
+            {
+                return response.Count;
+            }
+            return -1;
+        }
 
         protected abstract void UpdateIndexTypeMappingCore(IElasticClient client, string indexName);
 

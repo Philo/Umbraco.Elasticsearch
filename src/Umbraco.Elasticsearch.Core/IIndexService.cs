@@ -18,5 +18,7 @@ namespace Umbraco.Elasticsearch.Core
         string EntityTypeName { get; }
 
         string DocumentTypeName { get; }
+
+        long CountOfDocumentsForIndex(string indexName);
     }
 }

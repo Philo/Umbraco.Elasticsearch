@@ -46,7 +46,6 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
 
         protected virtual void IndexCore(IElasticsearchRepository repository, TUmbracoDocument document, string indexName = null)
         {
-            Thread.Sleep(4000);
             repository.Save(document, indexName);
         }
 
@@ -99,6 +98,16 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
 
         public string DocumentTypeName { get; } =
             typeof (TUmbracoDocument).GetCustomAttribute<ElasticTypeAttribute>().Name;
+
+        public long CountOfDocumentsForIndex(string indexName)
+        {
+            var response = _repository.Query(new CountOfDocsForTypeQuery(DocumentTypeName), indexName);
+            if (response.IsValid)
+            {
+                return response.Count;
+            }
+            return -1;
+        }
 
         protected virtual void Create(TUmbracoDocument doc, IContent content)
         {
