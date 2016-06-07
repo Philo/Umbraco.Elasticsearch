@@ -56,10 +56,10 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
 
         protected virtual void RemoveCore(IElasticsearchRepository repository, IContent content, string indexName = null)
         {
-            // this might be flawed if the document id isnt the node id
-            if (repository.Exists<TUmbracoDocument>(content.Id.ToString(), indexName))
+            var idValue = IdFor(content);
+            if (repository.Exists<TUmbracoDocument>(idValue, indexName))
             {
-                repository.Delete<TUmbracoDocument>(content.Id.ToString(), indexName);
+                repository.Delete<TUmbracoDocument>(idValue, indexName);
             }
         }
 

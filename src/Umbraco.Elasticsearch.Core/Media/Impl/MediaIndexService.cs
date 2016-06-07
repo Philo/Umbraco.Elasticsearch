@@ -50,10 +50,11 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
 
         protected virtual void RemoveCore(IElasticsearchRepository repository, IMedia media, string indexName)
         {
-            // this might be flawed if the document id isnt the node id
-            if (repository.Exists<TMediaDocument>(media.Id.ToString(), indexName))
+            var mediaContent = Helper.TypedMedia(media.Id);
+            var idValue = IdFor(mediaContent);
+            if (repository.Exists<TMediaDocument>(idValue, indexName))
             {
-                repository.Delete<TMediaDocument>(media.Id.ToString(), indexName);
+                repository.Delete<TMediaDocument>(idValue, indexName);
             }
         }
 
