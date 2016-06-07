@@ -9,7 +9,7 @@
         <fieldset>
             <legend>Index information</legend>
             <div class="umb-sub-header">
-                <button class="btn btn-info btn-icon" data-ng-click="refreshIndexLIst()"><i class="icon icon-refresh"></i> Refresh</button>
+                <button class="btn btn-info btn-icon" data-ng-click="refreshIndexList()"><i class="icon icon-refresh"></i> Refresh</button>
                 <button data-ng-disabled="busy" class="btn btn-warning btn-icon" data-ng-click="addIndex()"><i class="icon icon-add"></i> Add Index</button>
             </div>
 
@@ -70,7 +70,7 @@
             <span data-ng-hide="contentServices" style="font-style: italic">No media indexing services registered</span>
             <ul data-ng-show="contentServices">
                 <li data-ng-repeat="service in contentServices">
-                    <strong>{{service.DocumentTypeName}}</strong> via <strong>{{service.Name}}</strong>
+                    <strong>{{service.DocumentTypeName}}</strong> via <strong>{{service.Name}}</strong> (Docs: {{service.Count}})
                 </li>
             </ul>
         </fieldset>
