@@ -5,15 +5,23 @@ using Nest;
 using Nest.Indexify;
 using Nest.Indexify.Contributors.Analysis.English;
 using Nest.Indexify.Contributors.IndexSettings;
+using Umbraco.Core;
 using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.EventHandlers;
 using Umbraco.Elasticsearch.Core.Media;
+using Umbraco.Elasticsearch.Sample.Features.Search.Services;
 
 namespace Umbraco.Elasticsearch.Sample.Features.Search
 {
     public class UmbracoElasticsearchStartup : SearchApplicationEventHandler
     {
+        protected override void ApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
+        {
+            SearchifyMvcConfig.Configure(umbracoApplication);
+            base.ApplicationStarting(umbracoApplication, applicationContext);
+        }
+
         protected override IElasticClient ConfigureElasticClient(FromConfigSearchSettings searchSettings)
         {
             var indexResolver = new DefaultIndexNameResolver();

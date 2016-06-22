@@ -1,10 +1,12 @@
 ﻿using System.Web.Mvc;
 using Nest.Queryify.Extensions;
 using Umbraco.Elasticsearch.Core;
+using Umbraco.Elasticsearch.Sample.Features.Search.Models;
+using Umbraco.Elasticsearch.Sample.Features.Search.Queries;
 using Umbraco.Web.Models;
 using Umbraco.Web.Mvc;
 
-namespace Umbraco.Elasticsearch.Sample.Features.Search
+namespace Umbraco.Elasticsearch.Sample.Features.Search.Controllers
 {
     public class DtSearchController : RenderMvcController
     {

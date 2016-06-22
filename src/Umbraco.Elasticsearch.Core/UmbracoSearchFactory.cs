@@ -7,7 +7,6 @@ using Nest.Indexify;
 using Nest.Queryify.Abstractions;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
-using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.Media;
 
@@ -101,50 +100,11 @@ namespace Umbraco.Elasticsearch.Core
         public static void SetDefaultRepository(IElasticsearchRepository repository)
         {
             _repository = repository;
-            IsSearchAvailable(true);
         }
 
         public static void SetDefaultClient(IElasticClient client)
         {
             _client = client;
-            IsSearchAvailable(true);
-        }
-        
-        private static DateTimeOffset _isSearchAvailableLastCheckDateTimeOffset;
-        private static readonly object SearchAvailabilityLock = new object();
-
-        private static bool? _isSearchAvailable;
-        public static bool IsSearchAvailable(bool forceCheck = false)
-        {
-            if (_client == null) return false;
-
-            if (ShouldRefreshSearchAvailability(forceCheck))
-            {
-                lock (SearchAvailabilityLock)
-                {
-                    try
-                    {
-                        _isSearchAvailableLastCheckDateTimeOffset = DateTimeOffset.UtcNow;
-                        var pingResponse = _client.Ping();
-                        _isSearchAvailable = pingResponse.IsValid;
-                        LogHelper.Info(typeof(UmbracoSearchFactory), () => $"Checking search availability - HTTP Response Status = [{pingResponse.ConnectionStatus.HttpStatusCode}]");
-                    }
-                    catch (Exception ex)
-                    {
-                        LogHelper.Error(typeof(UmbracoSearchFactory), "No response or exception from search availability check", ex);
-                        _isSearchAvailable = false;
-                    }
-                }
-            }
-            return _isSearchAvailable.GetValueOrDefault();
-        }
-
-        private static bool ShouldRefreshSearchAvailability(bool forceCheck)
-        {
-            return
-                !_isSearchAvailable.HasValue
-                || forceCheck
-                || _isSearchAvailableLastCheckDateTimeOffset.Subtract(DateTimeOffset.UtcNow).TotalMinutes >= Settings.AvailbilityRefreshIntervalMinutes;
         }
     }
 }

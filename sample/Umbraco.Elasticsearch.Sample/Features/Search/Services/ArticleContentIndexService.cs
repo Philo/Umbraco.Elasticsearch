@@ -1,8 +1,9 @@
 ﻿using Nest;
 using Umbraco.Core.Models;
 using Umbraco.Elasticsearch.Core.Content.Impl;
+using Umbraco.Elasticsearch.Sample.Features.Search.Queries;
 
-namespace Umbraco.Elasticsearch.Sample.Features.Search
+namespace Umbraco.Elasticsearch.Sample.Features.Search.Services
 {
     public class ArticleContentIndexService : ContentIndexService<ArticleDocument>
     {

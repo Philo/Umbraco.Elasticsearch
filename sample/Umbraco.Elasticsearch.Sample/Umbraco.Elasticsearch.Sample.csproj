@@ -181,12 +181,16 @@
       <HintPath>..\..\packages\Nest.Indexify.0.3.1\lib\net452\Nest.Indexify.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nest.Queryify, Version=0.6.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Nest.Queryify.0.6.0\lib\net45\Nest.Queryify.dll</HintPath>
+    <Reference Include="Nest.Queryify, Version=0.7.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nest.Queryify.0.7.0-preview0002\lib\net45\Nest.Queryify.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Nest.Searchify, Version=0.9.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Nest.Searchify.0.9.1\lib\net45\Nest.Searchify.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Nest.Searchify.Mvc, Version=0.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Nest.Searchify.Mvc.0.3.0\lib\net46\Nest.Searchify.Mvc.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -362,6 +366,8 @@
     <Content Include="Config\404handlers.config" />
     <Content Include="Views\DtSearch\DtSearch.cshtml" />
     <None Include="App_Plugins\umbElasticsearch\package.manifest" />
+    <Content Include="Views\Shared\_SearchifyMvcParametersPartial.cshtml" />
+    <Content Include="Templates\Views\Shared\_SearchifyMvcParametersPartial.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
@@ -399,6 +405,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Start\SearchifyMvcConfig.cs" />
     <Compile Include="Features\Search\Services\ArticleContentIndexService.cs" />
     <Compile Include="Features\Search\Queries\ArticleDocument.cs" />
     <Compile Include="Features\Search\Queries\ArticleSearchParameters.cs" />

@@ -1,0 +1,10 @@
+﻿@model System.Collections.Specialized.NameValueCollection
+
+@foreach (var key in Model.AllKeys)
+{
+    var values = Model?.GetValues(key) ?? Enumerable.Empty<string>();
+    foreach (var value in values)
+    {
+        @Html.Hidden(key, value)
+    }
+}
