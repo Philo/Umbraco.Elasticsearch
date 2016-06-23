@@ -16,7 +16,8 @@ namespace Umbraco.Elasticsearch.Admin.Api
     public class SearchApiController : UmbracoAuthorizedJsonController
     {
         private readonly IElasticClient _client;
-
+        private static Version _versionInfo;
+        
         public SearchApiController(IElasticClient client)
         {
             _client = client;
@@ -69,6 +70,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
         public async Task<object> IndicesInfo()
         {
             var response = await _client.IndicesStatsAsync();
+
             return response.Indices.Where(x => x.Key.StartsWith(_client.Infer.DefaultIndex)).Select(x => new
             {
                 Name = x.Key,
@@ -115,6 +117,29 @@ namespace Umbraco.Elasticsearch.Admin.Api
             indexer.Build(indexName);
 
             return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IHttpActionResult> SearchVersionInfo()
+        {
+            var versionNumber = await GetVersionInfo();
+            return Ok(new
+            {
+                version = versionNumber.ToString(3)
+            });
+        }
+
+        private async Task<Version> GetVersionInfo()
+        {
+            if (_versionInfo == null)
+            {
+                var info = await _client.RootNodeInfoAsync();
+                if (info.IsValid)
+                {
+                    _versionInfo = new Version(info.Version.Number);
+                }
+            }
+            return _versionInfo;
         }
     }
 }

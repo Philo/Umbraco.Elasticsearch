@@ -5,6 +5,12 @@
         }
 
         return {
+            getVersionNumber: function () {
+                return $http.get(apiUrl("SearchVersionInfo")).then(function (data) {
+                    console.log(data.data.version);
+                    return data.data.version;
+                });
+            },
             getIndicesInfo: function () {
                 return $http.get(apiUrl("IndicesInfo"));
             },

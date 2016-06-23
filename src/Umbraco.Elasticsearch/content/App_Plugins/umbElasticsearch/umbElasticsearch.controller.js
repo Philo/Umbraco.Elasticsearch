@@ -39,9 +39,14 @@
     };
 
     $scope.getIndicesInfo = function () {
-        $log.info("get indices info");
         return searchResource.getIndicesInfo().then(function (data) {
             $scope.info = data.data;
+        });
+    };
+
+    $scope.getVersionNumber = function () {
+        return searchResource.getVersionNumber().then(function (version) {
+            $scope.versionNumber = version;
         });
     };
 
@@ -102,6 +107,7 @@
         $scope.settings = searchResource.getSettings();
         $log.info('settings', $scope.settings);
         if ($scope.settings) {
+            $scope.getVersionNumber();
             $scope.getIndicesInfo();
             $scope.getContentServicesList();
             $scope.getMediaServicesList();
