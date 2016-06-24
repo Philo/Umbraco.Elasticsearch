@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Win32;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Events;
@@ -16,6 +17,20 @@ using Umbraco.Web.UI.JavaScript;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
+    public static class SearchSettingsExtensions
+    {
+        public static T GetAdditionalData<T>(this ISearchSettings settings, string key)
+        {
+            var keyPair = settings.AdditionalData.FirstOrDefault(x => x.Key.InvariantEquals(key));
+            if (!string.IsNullOrWhiteSpace(keyPair.Key))
+            {
+                var attempt = keyPair.Value.TryConvertTo<T>();
+                if(attempt.Success) return attempt.Result;
+            }
+            return default(T);
+        }
+    }
+
     public abstract class SearchApplicationEventHandler : SearchApplicationEventHandler<FromConfigSearchSettings>
     {
         protected SearchApplicationEventHandler() : base(new FromConfigSearchSettings())
@@ -26,6 +41,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
     public abstract partial class SearchApplicationEventHandler<TSearchSettings> : ApplicationEventHandler
         where TSearchSettings : ISearchSettings
     {
+
         protected SearchApplicationEventHandler(TSearchSettings searchSettings)
         {
             SearchSettings<TSearchSettings>.Set(searchSettings);
@@ -33,6 +49,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             ContentService.Published += ContentService_Published;
             ContentService.UnPublished += ContentServiceOnUnPublished;
             ContentService.Trashed += ContentServiceOnTrashed;
+
             CacheRefresherBase<PageCacheRefresher>.CacheUpdated += CacheRefresherBaseOnCacheUpdated;
 
             MediaService.Saved += MediaServiceOnSaved;
@@ -107,7 +124,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
 
             if (content != null)
             {
-                if (content.CreateDate == content.UpdateDate)
+                if (content.CreateDate == content.UpdateDate && !content.HasIdentity)
                 {
                     IndexContentCore(new[] { content }, null);
                 }

@@ -113,6 +113,7 @@ Task("Copy-Files-Umbraco-Elasticsearch")
 {
     EnsureDirectoryExists(buildOutput +"/Umbraco.Elasticsearch");
     CopyFile("./src/Umbraco.Elasticsearch/bin/" +configuration +"/Umbraco.Elasticsearch.dll", buildOutput +"/Umbraco.Elasticsearch/Umbraco.Elasticsearch.dll");
+    CopyFile("./src/Umbraco.Elasticsearch/bin/" +configuration +"/readme.txt", buildOutput +"/Umbraco.Elasticsearch/readme.txt");
     CopyDirectory("./src/Umbraco.Elasticsearch/content", buildOutput +"/Umbraco.Elasticsearch/content");
 });
 
@@ -188,7 +189,7 @@ Task("Package-Umbraco-Elasticsearch")
                 new NuSpecContent { Source = "content/dashboard.config.install.xdt", Target = "content/config" },
                 new NuSpecContent { Source = "content/dashboard.config.uninstall.xdt", Target = "content/config" },
 
-                new NuSpecContent { Source = "content/UmbracoElasticsearchStartup.cs.pp", Target = "content" },
+                new NuSpecContent { Source = "readme.txt", Target = "" },
 
                 new NuSpecContent { Source = "content/App_Plugins/umbElasticsearch/**/*", Target = "" }
             },
@@ -207,42 +208,6 @@ Task("Package")
     .IsDependentOn("Package-Umbraco-Elasticsearch")
     .IsDependentOn("Package-Umbraco-Elasticsearch-Core")
     .Does(() => { });
-
-// Task("Package")
-//     .IsDependentOn("Build")
-//     .Does(() => 
-// {
-//     foreach(var nugetProjectPath in nugetProjectPaths) {
-//         var settings = new NuGetPackSettings {
-//             Properties = new Dictionary<string, string> { { "Configuration", configuration }},
-//             Symbols = true,
-//             NoPackageAnalysis = true,
-//             Version = versionInfo.NuGetVersionV2,
-//             OutputDirectory = artifacts,
-//             IncludeReferencedProjects = true
-//         };
-//         NuGetPack(nugetProjectPath, settings);                     
-//     }
-// });
-
-/*
- * TODO : erm, unit tests
- *
-Task("Run-Unit-Tests")
-    .IsDependentOn("Build")
-    .Does(() =>
-{
-    CreateDirectory(testResultsPath);
-
-    var settings = new XUnit2Settings {
-        XmlReportV1 = true,
-        NoAppDomain = true,
-        OutputDirectory = testResultsPath,
-    };
-    settings.ExcludeTrait("Category", "Integration");
-    
-    XUnit2(testAssemblies, settings);
-}); */
 
 Task("Update-AppVeyor-Build-Number")
     .IsDependentOn("Update-Version-Info")

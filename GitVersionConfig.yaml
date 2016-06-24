@@ -1,3 +1,12 @@
 assembly-versioning-scheme: MajorMinorPatch
 mode: ContinuousDeployment
-branches: {}
+continuous-delivery-fallback-tag: preview
+branches: 
+  master:
+    increment: Patch
+    prevent-increment-of-merged-branch-version: true
+  (pull|pull\-requests|pr)[/-]:
+    tag: PullRequest
+    increment: Inherit
+    track-merge-target: true
+    tag-number-pattern: '[/-](?<number>\d+)[-/]'

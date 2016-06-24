@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Nest;
-using Nest.Indexify;
-using Nest.Indexify.Contributors.Analysis.English;
-using Nest.Indexify.Contributors.IndexSettings;
-using Umbraco.Elasticsearch.Core.Config;
-using Umbraco.Elasticsearch.Core.Content;
-using Umbraco.Elasticsearch.Core.EventHandlers;
-using Umbraco.Elasticsearch.Core.Media;
+﻿Umbraco.Elasticsearch
+---------------------
 
-namespace $rootnamespace$
-{
+Visit http://github.com/philo/umbraco.elasticsearch
+
+Post-installation steps
+-----------------------
+
+If you dont already have one, you will need toi setup a SearchApplicationEventHandler like the one below:
+
     public class UmbracoElasticsearchStartup : SearchApplicationEventHandler
     {
         protected override IElasticClient ConfigureElasticClient(FromConfigSearchSettings searchSettings)
@@ -36,14 +32,15 @@ namespace $rootnamespace$
         {
             return Enumerable.Empty<IMediaIndexService>();
         }
+
+		internal class UmbracoElasticsearchIndexCreationStrategy : ElasticsearchIndexCreationStrategy
+		{
+			public UmbracoElasticsearchIndexCreationStrategy(IElasticClient client) : base(client)
+			{
+				AddContributor(new EnglishIndexAnalysisContributor());
+				AddContributor(new IndexSettingsContributor(1, 1));
+			}
+		}
     }
 
-    internal class UmbracoElasticsearchIndexCreationStrategy : ElasticsearchIndexCreationStrategy
-    {
-        public UmbracoElasticsearchIndexCreationStrategy(IElasticClient client) : base(client)
-        {
-            AddContributor(new EnglishIndexAnalysisContributor());
-            AddContributor(new IndexSettingsContributor(1, 1));
-        }
-    }
-}
+
