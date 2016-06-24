@@ -312,6 +312,7 @@
     <Compile Include="EventHandlers\SearchApplicationEventHandler_Configure.cs" />
     <Compile Include="EventHandlers\SearchApplicationEventHandler_Content.cs" />
     <Compile Include="EventHandlers\SearchApplicationEventHandler_Media.cs" />
+    <Compile Include="Config\SearchSettingsExtensions.cs" />
     <Compile Include="IEntityIndexer.cs" />
     <Compile Include="IIndexManager.cs" />
     <Compile Include="IIndexService.cs" />
@@ -322,7 +323,6 @@
     <Compile Include="Media\Impl\MediaIndexService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Queries\DeleteAllOfDocumentTypeQuery.cs" />
-    <Compile Include="Config\Settings.cs" />
     <Compile Include="UmbracoDocument.cs" />
     <Compile Include="UmbracoSearchFactory.cs" />
     <Compile Include="Utils\ConfigurationManagerUtils.cs" />
