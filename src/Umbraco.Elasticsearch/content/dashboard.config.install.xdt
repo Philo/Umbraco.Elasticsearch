@@ -11,7 +11,7 @@
       </xs:complexType>
     </xs:element>
   </xs:schema>
-  <section alias="umbElasticsearch" xdt:Transform="InsertIfMissing">
+  <section alias="umbElasticsearch" xdt:Transform="InsertIfMissing" xdt:Locator="Match(alias)">
     <areas>
       <area>developer</area>
     </areas>

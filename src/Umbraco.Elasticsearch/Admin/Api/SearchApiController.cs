@@ -76,7 +76,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
         {
             var response = await _client.IndicesStatsAsync();
 
-            return response.Indices.Where(x => x.Key.StartsWith(_indexName)).Select(x => new
+            return response.Indices.Where(x => x.Key.StartsWith($"{_indexName}-")).Select(x => new
             {
                 Name = x.Key,
                 DocCount = x.Value.Total.Documents.Count,

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Web;
 using Nest;
 using Nest.Indexify;
 using Nest.Indexify.Contributors.Analysis.English;
@@ -18,10 +19,9 @@ namespace Umbraco.Elasticsearch.Samplev73.Features.Search
 {
     public class UmbracoElasticsearchStartup : SearchApplicationEventHandler
     {
-        protected override void ApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
+        public UmbracoElasticsearchStartup()
         {
-            SearchifyMvcConfig.Configure(umbracoApplication);
-            base.ApplicationStarting(umbracoApplication, applicationContext);
+            SearchifyMvcConfig.Configure(HttpContext.Current.ApplicationInstance);
         }
 
         protected override IElasticClient ConfigureElasticClient(FromConfigSearchSettings searchSettings)

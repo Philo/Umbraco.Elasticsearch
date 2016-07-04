@@ -11,9 +11,4 @@
       </xs:complexType>
     </xs:element>
   </xs:schema>
-  <appSettings>
-    <add key="umbElasticsearch:Host" value="" xdt:Transform="Remove" xdt:Locator="Match(key)" />
-    <add key="umbElasticsearch:IndexName" value="" xdt:Transform="Remove" xdt:Locator="Match(key)" />
-    <add key="umbElasticsearch:IndexEnvironmentPrefix" value="" xdt:Transform="Remove" xdt:Locator="Match(key)" />
-  </appSettings>
 </configuration>
