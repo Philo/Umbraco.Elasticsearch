@@ -11,5 +11,5 @@
       </xs:complexType>
     </xs:element>
   </xs:schema>
-  <section alias="umbElasticsearch" xdt:Transform="remove" xdt:Locator="Match(alias)" />
+  <section alias="umbElasticsearch" xdt:Transform="Remove" xdt:Locator="Match(alias)" />
 </dashBoard>
