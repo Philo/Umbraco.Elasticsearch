@@ -1,19 +1,53 @@
 using System.Linq;
+using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
+using Umbraco.Elasticsearch.Core.Content.Impl;
 using Umbraco.Web;
 
 namespace Umbraco.Elasticsearch.Core.Media.Impl
 {
-    public class MediaIndexer : IEntityIndexer
+    /*
+    public abstract class EntityIndexer : IEntityIndexer
     {
-        private readonly IMediaService _mediaService;
-        public MediaIndexer(IMediaService mediaService)
+        private readonly UmbracoContext _umbracoContext;
+
+        protected EntityIndexer(UmbracoContext umbracoContext)
         {
-            _mediaService = mediaService;
+            _umbracoContext = umbracoContext;
         }
 
-        public MediaIndexer() : this(UmbracoContext.Current.Application.Services.MediaService) { }
+        private void BuildForIndexService(IMediaIndexService indexService, string indexName)
+        {
+            var mt = _umbracoContext.Application.Services.MediaService;
+            var cts = _umbracoContext.Application.Services.ContentTypeService;
+            var mediaType = cts.GetContentType(indexService.DocumentTypeName);
+            var contentList = mt.GetMediaOfMediaType(mediaType.Id).Where(x => !x.Trashed).ToList();
+
+            LogHelper.Info<MediaIndexer>($"Started building index for {mediaType.Alias} (total: {contentList.Count}) in [{indexName}]");
+            indexService.Update(contentList, indexName);
+        }
+
+        protected abstract 
+
+        public void Build(string indexName)
+        {
+            foreach (var mediaIndexService in UmbracoSearchFactory.GetMediaIndexServices())
+            {
+                BuildForIndexService(mediaIndexService, indexName);
+            }
+        }
+    } */
+
+    public class MediaIndexer : IEntityIndexer
+    {
+        private readonly UmbracoContext _umbracoContext;
+        public MediaIndexer(UmbracoContext umbracoContext)
+        {
+            _umbracoContext = umbracoContext;
+        }
+
+        public MediaIndexer() : this(UmbracoContext.Current) { }
 
         private static IMediaIndexService IndexServiceFor(IMedia media)
         {
@@ -22,12 +56,13 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
 
         public void Build(string indexName)
         {
-            foreach (var node in _mediaService.GetRootMedia())
+            foreach (var indexService in UmbracoSearchFactory.GetMediaIndexServices())
             {
-                Publish(node, indexName, true);
+                indexService.Build(indexName);
             }
         }
 
+        /*
         private void Publish(IMedia mediaInstance, string indexName, bool isRecursive = false)
         {
             if (mediaInstance != null)
@@ -50,7 +85,7 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
                     }
                 }
             }
-        }
+        } */
 
     }
 }

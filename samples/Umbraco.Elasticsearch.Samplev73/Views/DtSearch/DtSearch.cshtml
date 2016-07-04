@@ -1,0 +1,17 @@
+﻿@using Umbraco.Elasticsearch.Samplev73.Features.Search.Models
+@using Umbraco.Elasticsearch.Samplev73.Features.Search.Queries.Article
+
+@inherits UmbracoViewPage<SearchResultModel<ArticleSearchResult, ArticleSearchParameters, ArticleDocument>>
+
+<div>
+    <h2>Search Results</h2>
+    <ul>
+        @foreach (var item in Model.Results.Documents)
+        {
+            <li>
+                <h4>@item.Title</h4>
+                <span>@item.Summary</span>
+            </li>
+        }
+    </ul>
+</div>

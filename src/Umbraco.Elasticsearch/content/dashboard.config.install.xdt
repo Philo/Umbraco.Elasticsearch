@@ -11,11 +11,14 @@
       </xs:complexType>
     </xs:element>
   </xs:schema>
-  <section alias="umbElasticsearch" xdt:Transform="InsertIfMissing" xdt:Locator="Match(alias)">
+  <section alias="umbElasticsearch" xdt:Transform="InsertIfMissing">
     <areas>
       <area>developer</area>
     </areas>
     <tab caption="Elasticsearch">
+      <access>
+        <grant>admin</grant>
+      </access>      
       <control>
         /App_Plugins/umbElasticsearch/umbElasticsearch.html
       </control>

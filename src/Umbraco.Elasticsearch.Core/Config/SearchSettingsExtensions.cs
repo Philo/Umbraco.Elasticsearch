@@ -1,8 +1,7 @@
 using System.Linq;
 using Umbraco.Core;
-using Umbraco.Elasticsearch.Core.Config;
 
-namespace Umbraco.Elasticsearch.Core.EventHandlers
+namespace Umbraco.Elasticsearch.Core.Config
 {
     public static class SearchSettingsExtensions
     {

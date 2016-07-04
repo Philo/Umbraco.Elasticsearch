@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Umbraco.Core.Models;
 
 namespace Umbraco.Elasticsearch.Core.Content
@@ -9,7 +10,6 @@ namespace Umbraco.Elasticsearch.Core.Content
 
     public interface IContentIndexService<in TContent> : IIndexService<TContent> where TContent : IContent
     {
-
     }
 
 }

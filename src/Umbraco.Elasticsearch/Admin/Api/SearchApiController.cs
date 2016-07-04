@@ -17,13 +17,17 @@ namespace Umbraco.Elasticsearch.Admin.Api
     {
         private readonly IElasticClient _client;
         private static Version _versionInfo;
-        
+        private readonly string _indexName;
+
         public SearchApiController(IElasticClient client)
         {
             _client = client;
         }
 
-        public SearchApiController() : this(UmbracoSearchFactory.Client) { }
+        public SearchApiController() : this(UmbracoSearchFactory.Client)
+        {
+            _indexName = UmbracoSearchFactory.Client.Infer.DefaultIndex;
+        }
 
         [HttpGet]
         public IHttpActionResult MediaIndexServicesList()
@@ -33,7 +37,8 @@ namespace Umbraco.Elasticsearch.Admin.Api
             return Ok(media.Select(x => new
             {
                 x.DocumentTypeName,
-                x.GetType().Name
+                x.GetType().Name,
+                Count = x.CountOfDocumentsForIndex(_indexName)
             }));
         }
 
@@ -46,7 +51,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
             {
                 x.DocumentTypeName,
                 x.GetType().Name,
-                Count = x.CountOfDocumentsForIndex(UmbracoSearchFactory.Client.Infer.DefaultIndex)
+                Count = x.CountOfDocumentsForIndex(_indexName)
             }));
         }
 
@@ -71,7 +76,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
         {
             var response = await _client.IndicesStatsAsync();
 
-            return response.Indices.Where(x => x.Key.StartsWith(_client.Infer.DefaultIndex)).Select(x => new
+            return response.Indices.Where(x => x.Key.StartsWith(_indexName)).Select(x => new
             {
                 Name = x.Key,
                 DocCount = x.Value.Total.Documents.Count,
@@ -83,16 +88,16 @@ namespace Umbraco.Elasticsearch.Admin.Api
 
         private bool GetStatus(string indexName)
         {
-            return _client.AliasExists(x => x.Index(indexName).Name(_client.Infer.DefaultIndex)).Exists;
+            return _client.AliasExists(x => x.Index(indexName).Name(_indexName)).Exists;
         }
         
         [HttpPost]
-        public IHttpActionResult CreateIndex()
+        public async Task<IHttpActionResult> CreateIndex()
         {
             var manager = new IndexManager();
             try
             {
-                manager.Create();
+                await manager.CreateAsync();
                 return Ok();
             }
             catch (Exception ex)
@@ -140,6 +145,23 @@ namespace Umbraco.Elasticsearch.Admin.Api
                 }
             }
             return _versionInfo;
+        }
+
+        [HttpGet]
+        public async Task<IHttpActionResult> Ping()
+        {
+            try
+            {
+                var result = await UmbracoSearchFactory.IsActiveAsync();
+                return Ok(new
+                {
+                    active = result
+                });
+            }
+            catch
+            {
+                return Ok(false);
+            }
         }
     }
 }

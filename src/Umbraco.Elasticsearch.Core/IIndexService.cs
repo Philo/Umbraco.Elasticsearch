@@ -1,19 +1,21 @@
+using System.Collections;
+using System.Collections.Generic;
 using Umbraco.Core.Models;
 
 namespace Umbraco.Elasticsearch.Core
 {
     public interface IIndexService<in TEntity> where TEntity : IContentBase
     {
-        void Index(TEntity content, string indexName);
-        void Remove(TEntity content, string indexName);
+        void Build(string indexName);
 
-        bool IsExcludedFromIndex(TEntity content);
+        void Index(TEntity entity, string indexName);
+        void Remove(TEntity entity, string indexName);
 
-        bool ShouldIndex(TEntity content);
+        bool IsExcludedFromIndex(TEntity entity);
+
+        bool ShouldIndex(TEntity entity);
 
         void UpdateIndexTypeMapping(string indexName);
-
-        void ClearIndexType(string indexName);
 
         string EntityTypeName { get; }
 

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Umbraco.Core.Logging;
@@ -18,24 +20,28 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
         }
 
         public ContentIndexer() : this(UmbracoContext.Current) { }
-
-        private static IContentIndexService IndexServiceFor(IContent content)
-        {
-            return UmbracoSearchFactory.GetContentIndexService(content);
-        }
-
+        
         public void Build(string indexName)
         {
             _stopWatch.Restart();
             LogHelper.Info<ContentIndexer>($"Started building index [{indexName}]");
-            foreach (var node in _umbracoContext.Application.Services.ContentService.GetRootContent())
+            foreach (var indexService in UmbracoSearchFactory.GetContentIndexServices())
             {
-                Publish(node, indexName, true);
+                try
+                {
+                    LogHelper.Info<ContentIndexer>($"Started to index content for {indexService.DocumentTypeName}");
+                    indexService.Build(indexName);
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.Error<ContentIndexer>($"Failed to index content for {indexService.DocumentTypeName}", ex);
+                }
             }
             _stopWatch.Stop();
             LogHelper.Info<ContentIndexer>($"Finished building index [{indexName}] : elapsed {_stopWatch.Elapsed.ToString("g")}");
         }
 
+        /*
         private void Publish(IContent contentInstance, string indexName, bool isRecursive = false)
         {
             if (contentInstance != null)
@@ -75,6 +81,6 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
                 .Where(content => content != null)
                 .Select(content => $"{content.Name}({content.Id})")
                 );
-        }
+        } */
     }
 }

@@ -44,6 +44,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
 
         protected override void ApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
+            DashboardHelper.EnsureSection("umbElasticsearch", "Elasticsearch", "/App_Plugins/umbElasticsearch/umbElasticsearch.html");
             InstallServerVars();
         }
 

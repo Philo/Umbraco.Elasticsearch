@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
-using Umbraco.Elasticsearch.Utils;
+using Umbraco.Elasticsearch.Core.Utils;
 
 namespace Umbraco.Elasticsearch.Core.Config
 {
