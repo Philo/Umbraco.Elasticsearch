@@ -1,4 +1,5 @@
-﻿angular.module("umbraco.resources")
+﻿/*global Umbraco */
+angular.module("umbraco.resources")
     .factory("umbElasticsearchResource", function ($http, umbRequestHelper) {
         var apiUrl = function (method) {
             return umbRequestHelper.getApiUrl("umbElasticsearchApiUrl", method);
@@ -7,12 +8,19 @@
         return {
             getVersionNumber: function () {
                 return $http.get(apiUrl("SearchVersionInfo")).then(function (data) {
-                    console.log(data.data.version);
                     return data.data.version;
+                });
+            },
+            getPluginVersionInfo: function () {
+                return $http.get(apiUrl("PluginVersionInfo")).then(function (data) {
+                    return data.data;
                 });
             },
             getIndicesInfo: function () {
                 return $http.get(apiUrl("IndicesInfo"));
+            },
+            getIndexInfo: function (indexName) {
+                return $http.post(apiUrl("GetIndexInfo"), '"' + indexName + '"');
             },
             rebuildContentIndex: function (indexName) {
                 return $http.post(apiUrl("RebuildContentIndex"), '"' + indexName + '"');
@@ -40,7 +48,6 @@
             },
             ping: function () {
                 return $http.get(apiUrl("Ping")).then(function (response) {
-                    console.log(response);
                     return response.data.active !== null && response.data.active === true;
                 });
             }

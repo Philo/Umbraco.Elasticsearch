@@ -29,6 +29,9 @@ namespace Umbraco.Elasticsearch.Samplev73.Features.Search
             var indexResolver = new DefaultIndexNameResolver();
             var indexName = indexResolver.Resolve(searchSettings, searchSettings.IndexName);
             var connection = new ConnectionSettings(new Uri(searchSettings.Host), indexName);
+            connection.EnableTrace();
+            connection.ExposeRawResponse();
+            connection.PrettyJson();
             return new ElasticClient(connection);
         }
 

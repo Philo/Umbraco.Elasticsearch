@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 using Umbraco.Core.Models;
 
 namespace Umbraco.Elasticsearch.Core

@@ -1,4 +1,4 @@
-﻿function umbElasticsearchController($log, $scope, $timeout, notificationsService, umbElasticsearchResource) {
+﻿function umbElasticsearchController($log, $scope, $timeout, notificationsService, umbElasticsearchResource, assetsService) {
 
     $scope.getContentServicesList = function () {
         umbElasticsearchResource.getContentIndexServices().then(function (data) {
@@ -39,8 +39,17 @@
     };
 
     $scope.getIndicesInfo = function () {
+        $scope.indexInfo = null;
+        $scope.indexName = null;
         return umbElasticsearchResource.getIndicesInfo().then(function (data) {
             $scope.info = data.data;
+        });
+    };
+
+    $scope.viewIndexInfo = function (indexName) {
+        return umbElasticsearchResource.getIndexInfo(indexName).then(function (data) {
+            $scope.indexName = indexName;
+            $scope.indexInfo = data.data;
         });
     };
 
@@ -99,6 +108,10 @@
     $scope.busy = false;
     $scope.available = false;
     function init() {
+        umbElasticsearchResource.getPluginVersionInfo().then(function (version) {
+            $scope.pluginVersionInfo = version;
+        });
+
         umbElasticsearchResource.ping().then(function (available) {
             $scope.available = available;
             if (available) {
@@ -118,4 +131,32 @@
 
 angular
     .module("umbraco")
-    .controller("umbElasticsearchController", ["$log", "$scope", "$timeout", "notificationsService", "umbElasticsearchResource", umbElasticsearchController]);
+    .filter('prettyJSON', function () {
+        function prettyPrintJson(json) {
+            return JSON ? JSON.stringify(json, null, '  ') : 'your browser doesnt support JSON so cant pretty print';
+        }
+        return prettyPrintJson;
+    })
+    .directive('confirmClick', function ($window) {
+        var i = 0;
+        return {
+            restrict: 'A',
+            priority: 1,
+            compile: function (tElem, tAttrs) {
+                var fn = '$$confirmClick' + i++,
+                    _ngClick = tAttrs.ngClick;
+                tAttrs.ngClick = fn + '($event)';
+
+                return function (scope, elem, attrs) {
+                    var confirmMsg = attrs.confirmClick || 'Are you sure?';
+
+                    scope[fn] = function (event) {
+                        if ($window.confirm(confirmMsg)) {
+                            scope.$eval(_ngClick, { $event: event });
+                        }
+                    };
+                };
+            }
+        };
+    })
+    .controller("umbElasticsearchController", ["$log", "$scope", "$timeout", "notificationsService", "umbElasticsearchResource", "assetsService", umbElasticsearchController]);

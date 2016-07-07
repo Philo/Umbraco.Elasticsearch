@@ -1,12 +1,21 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http.Formatting;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Elasticsearch.Net.Serialization;
 using Nest;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Umbraco.Elasticsearch.Core;
 using Umbraco.Elasticsearch.Core.Content.Impl;
 using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Media.Impl;
+using Umbraco.Elasticsearch.Core.Utils;
 using Umbraco.Web.Editors;
 using Umbraco.Web.Mvc;
 
@@ -162,6 +171,33 @@ namespace Umbraco.Elasticsearch.Admin.Api
             {
                 return Ok(false);
             }
+        }
+
+        [HttpGet]
+        public IHttpActionResult PluginVersionInfo()
+        {
+            var pluginVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "N/A";
+            var umbracoVersion = "umbracoConfigurationStatus".FromAppSettings();
+            return Ok(new
+            {
+                pluginVersion,
+                umbracoVersion
+            });
+        }
+
+        [HttpPost]
+        public async Task<IHttpActionResult> GetIndexInfo([FromBody] string indexName)
+        {
+            var response = await _client.GetMappingAsync(new GetMappingRequest(indexName, "*"));
+
+            if (response.IsValid)
+            {
+                var mapping = response.Mappings;
+                var raw = _client.Serializer.Serialize(mapping);
+                return Ok(JObject.Parse(UTF8Encoding.UTF8.GetString(raw)));
+            }
+            
+            return BadRequest("unable to retrieve index information");
         }
     }
 }
