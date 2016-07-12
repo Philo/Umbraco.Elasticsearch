@@ -6,6 +6,6 @@ namespace Umbraco.Elasticsearch.Core
 {
     public interface IIndexManager
     {
-        void Create(bool activate = false);
+        Task CreateAsync(bool activate = false);
     }
 }

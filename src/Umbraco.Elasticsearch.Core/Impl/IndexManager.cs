@@ -7,7 +7,7 @@ using Umbraco.Core.Logging;
 namespace Umbraco.Elasticsearch.Core.Impl
 {
     public class IndexManager : IIndexManager {
-        public void Create(bool activate = false)
+        public async Task CreateAsync(bool activate = false)
         {
             var strategy = UmbracoSearchFactory.GetIndexStrategy();
             var aliasContributor = new AliasedIndexContributor(activate);
@@ -16,7 +16,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
                     LogHelper.Info<IndexManager>(
                         $"Search index '{args.IndexAliasedTo}' has been created (activated: {args.Activated})");
 
-            strategy.Create(aliasContributor);
+            await strategy.CreateAsync(aliasContributor);
         }
     }
 

@@ -1,8 +1,6 @@
 ﻿using System;
 using Nest;
 using Nest.Indexify;
-using Nest.Queryify;
-using Nest.Queryify.Abstractions;
 using Umbraco.Core.Logging;
 using Umbraco.Elasticsearch.Core.Config;
 
@@ -17,10 +15,8 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             {
                 if(string.IsNullOrWhiteSpace(searchSettings.IndexName)) throw new ArgumentNullException(nameof(searchSettings.IndexName), "No indexName configured.  Ensure you have set am index name via ISearchSettings");
                 var client = ConfigureElasticClient(searchSettings);
-                var repository = ConfigureElasticsearchRepository(client);
 
                 UmbracoSearchFactory.SetDefaultClient(client);
-                UmbracoSearchFactory.SetDefaultRepository(repository);
                 UmbracoSearchFactory.RegisterIndexStrategy(GetIndexCreationStrategy(client));
             }
             catch (Exception ex)
@@ -30,11 +26,6 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         }
 
         protected abstract IElasticClient ConfigureElasticClient(TSearchSettings searchSettings);
-
-        protected virtual IElasticsearchRepository ConfigureElasticsearchRepository(IElasticClient client)
-        {
-            return new ElasticsearchRepository(client);
-        }
 
         protected abstract IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client);
     }

@@ -1,133 +1,27 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Nest;
-using Nest.Queryify.Abstractions;
-using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
-using Umbraco.Elasticsearch.Core.Queries;
+using Umbraco.Core.Services;
+using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Web;
 
 namespace Umbraco.Elasticsearch.Core.Media.Impl
 {
-    public abstract class MediaIndexService<TMediaDocument> : IMediaIndexService where TMediaDocument : UmbracoDocument, new()
+    public abstract class MediaIndexService<TMediaDocument> : IndexService<TMediaDocument, IMedia>, IMediaIndexService where TMediaDocument : class, IUmbracoDocument, new()
     {
-        private readonly IElasticClient _client;
-        private readonly IElasticsearchRepository _repository;
-        private readonly Lazy<string> _indexTypeName;
-        protected UmbracoHelper Helper { get; }
+        protected MediaIndexService(IElasticClient client, UmbracoContext umbracoContext) : base(client, umbracoContext) { }
 
-        protected string IndexTypeName => _indexTypeName.Value;
-
-        protected MediaIndexService(IElasticClient client, IElasticsearchRepository repository, UmbracoContext umbracoContext)
+        protected override sealed IEnumerable<IMedia> RetrieveIndexItems(ServiceContext serviceContext)
         {
-            _client = client;
-            _repository = repository;
-            _indexTypeName = new Lazy<string>(InitialiseIndexTypeName);
-            Helper = new UmbracoHelper(umbracoContext);
+            var mediaType = serviceContext.ContentTypeService.GetMediaType(DocumentTypeName);
+            return serviceContext.MediaService.GetMediaOfMediaType(mediaType.Id).Where(x => !x.Trashed);
         }
 
-        protected MediaIndexService() : this(UmbracoSearchFactory.Client, UmbracoSearchFactory.Repository, UmbracoContext.Current) { }
-
-        public void Index(IMedia media, string indexName)
+        public override sealed bool ShouldIndex(IMedia entity)
         {
-            if (ShouldIndex(media))
-            {
-                var doc = CreateCore(media);
-                IndexCore(_repository, doc, indexName);
-            }
+            return entity.ContentType.Alias.Equals(IndexTypeName, StringComparison.CurrentCultureIgnoreCase);
         }
-
-        protected virtual void IndexCore(IElasticsearchRepository repository, TMediaDocument document, string indexName)
-        {
-            repository.Save(document, indexName);
-        }
-
-        public void Remove(IMedia media, string indexName)
-        {
-            RemoveCore(_repository, media, indexName);
-        }
-
-        protected virtual void RemoveCore(IElasticsearchRepository repository, IMedia media, string indexName)
-        {
-            var mediaContent = Helper.TypedMedia(media.Id);
-            var idValue = IdFor(mediaContent);
-            if (repository.Exists<TMediaDocument>(idValue, indexName))
-            {
-                repository.Delete<TMediaDocument>(idValue, indexName);
-            }
-        }
-
-        public virtual bool IsExcludedFromIndex(IMedia content)
-        {
-            return false;
-        }
-
-        protected virtual string InitialiseIndexTypeName()
-        {
-            return typeof(TMediaDocument).GetCustomAttribute<ElasticTypeAttribute>()?.Name;
-        }
-
-        public virtual bool ShouldIndex(IMedia media)
-        {
-            return media.ContentType.Alias.Equals(IndexTypeName, StringComparison.CurrentCultureIgnoreCase);
-        }
-
-        public void UpdateIndexTypeMapping(string indexName)
-        {
-            var mapping = _client.GetMapping<TMediaDocument>(m => m.Index(indexName));
-            if (mapping.Mapping == null && !mapping.Mappings.Any())
-            {
-                UpdateIndexTypeMappingCore(_client, indexName);
-                LogHelper.Info<MediaIndexService<TMediaDocument>>(() => $"Updated media type mapping for '{typeof(TMediaDocument).Name}' using type name '{InitialiseIndexTypeName()}'");
-            }
-        }
-        public void ClearIndexType(string indexName)
-        {
-            _repository.Query(new DeleteAllOfDocumentTypeQuery<TMediaDocument>(), indexName);
-            UpdateIndexTypeMapping(indexName);
-        }
-
-        public string EntityTypeName => typeof(TMediaDocument).Name;
-        public string DocumentTypeName { get; } = typeof(TMediaDocument).GetCustomAttribute<ElasticTypeAttribute>().Name;
-        public long CountOfDocumentsForIndex(string indexName)
-        {
-            var response = _repository.Query(new CountOfDocsForTypeQuery(DocumentTypeName), indexName);
-            if (response.IsValid)
-            {
-                return response.Count;
-            }
-            return -1;
-        }
-
-        protected abstract void UpdateIndexTypeMappingCore(IElasticClient client, string indexName);
-
-        #region Move this to derived types
-        private TMediaDocument CreateCore(IMedia mediaInstance)
-        {
-            var media = Helper.TypedMedia(mediaInstance.Id);
-
-            var doc = new TMediaDocument();
-
-            doc.Id = IdFor(media);
-            doc.Title = media.Name;
-            doc.Url = media.Url();
-
-            Create(doc, media);
-
-            return doc;
-        }
-
-        protected virtual string IdFor(IPublishedContent media)
-        {
-            return media.Id.ToString();
-        }
-
-        protected virtual void Create(TMediaDocument doc, IPublishedContent media)
-        {
-            
-        }
-
-        #endregion
     }
 }

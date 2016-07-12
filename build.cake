@@ -113,6 +113,7 @@ Task("Copy-Files-Umbraco-Elasticsearch")
 {
     EnsureDirectoryExists(buildOutput +"/Umbraco.Elasticsearch");
     CopyFile("./src/Umbraco.Elasticsearch/bin/" +configuration +"/Umbraco.Elasticsearch.dll", buildOutput +"/Umbraco.Elasticsearch/Umbraco.Elasticsearch.dll");
+    CopyFile("./src/Umbraco.Elasticsearch/bin/" +configuration +"/Umbraco.Elasticsearch.pdb", buildOutput +"/Umbraco.Elasticsearch/Umbraco.Elasticsearch.pdb");
     CopyFile("./src/Umbraco.Elasticsearch/bin/" +configuration +"/readme.txt", buildOutput +"/Umbraco.Elasticsearch/readme.txt");
     CopyDirectory("./src/Umbraco.Elasticsearch/content", buildOutput +"/Umbraco.Elasticsearch/content");
 });
@@ -123,6 +124,7 @@ Task("Copy-Files-Umbraco-Elasticsearch-Core")
 {
     EnsureDirectoryExists(buildOutput +"/Umbraco.Elasticsearch.Core");
     CopyFile("./src/Umbraco.Elasticsearch.Core/bin/" +configuration +"/Umbraco.Elasticsearch.Core.dll", buildOutput +"/Umbraco.Elasticsearch.Core/Umbraco.Elasticsearch.Core.dll");
+    CopyFile("./src/Umbraco.Elasticsearch.Core/bin/" +configuration +"/Umbraco.Elasticsearch.Core.pdb", buildOutput +"/Umbraco.Elasticsearch.Core/Umbraco.Elasticsearch.Core.pdb");
 });
 
 Task("Package-Umbraco-Elasticsearch-Core")
@@ -149,11 +151,11 @@ Task("Package-Umbraco-Elasticsearch-Core")
             Tags = new[] { "Umbraco", "Elasticsearch" },
             Files = new[] {
                 new NuSpecContent { Source = "Umbraco.Elasticsearch.Core.dll", Target = "lib/net452" },
+                new NuSpecContent { Source = "Umbraco.Elasticsearch.Core.pdb", Target = "lib/net452" },
             },
             Dependencies = new [] {
-                new NuSpecDependency { Id = "Nest.Indexify", Version = "0.3.1" },
-                new NuSpecDependency { Id = "Nest.Searchify", Version = "0.9.1" },
-                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "7.2.0" }
+                new NuSpecDependency { Id = "Nest.Indexify", Version = "0.4.0" },
+                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "[7.3.0,8.0)" },
             }
         };
         NuGetPack("./src/Umbraco.Elasticsearch.Core/Umbraco.Elasticsearch.Core.nuspec", settings);                     
@@ -183,6 +185,7 @@ Task("Package-Umbraco-Elasticsearch")
             Tags = new[] { "Umbraco", "Elasticsearch" },
             Files = new[] {
                 new NuSpecContent { Source = "Umbraco.Elasticsearch.dll", Target = "lib/net452" },
+                new NuSpecContent { Source = "Umbraco.Elasticsearch.pdb", Target = "lib/net452" },
 
                 new NuSpecContent { Source = "content/web.config.install.xdt", Target = "content" },
                 new NuSpecContent { Source = "content/web.config.uninstall.xdt", Target = "content" },
@@ -194,9 +197,8 @@ Task("Package-Umbraco-Elasticsearch")
                 new NuSpecContent { Source = "content/App_Plugins/umbElasticsearch/**/*", Target = "" }
             },
             Dependencies = new [] {
-                new NuSpecDependency { Id = "Nest.Indexify", Version = "0.3.1" },
-                new NuSpecDependency { Id = "Nest.Searchify", Version = "0.9.1" },
-                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "7.2.0" },
+                new NuSpecDependency { Id = "Nest.Indexify", Version = "0.4.0" },
+                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "[7.3.0,8.0)" },
                 new NuSpecDependency { Id = "Umbraco.Elasticsearch.Core", Version = "[" +versionInfo.NuGetVersionV2 +"]" }
             }
         };

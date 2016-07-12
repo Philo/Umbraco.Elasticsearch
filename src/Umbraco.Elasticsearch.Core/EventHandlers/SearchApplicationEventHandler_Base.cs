@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Win32;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Events;
@@ -27,7 +26,6 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
     public abstract partial class SearchApplicationEventHandler<TSearchSettings> : ApplicationEventHandler
         where TSearchSettings : ISearchSettings
     {
-
         protected SearchApplicationEventHandler(TSearchSettings searchSettings)
         {
             SearchSettings<TSearchSettings>.Set(searchSettings);
@@ -42,18 +40,21 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             MediaService.Deleted += MediaServiceOnDeleted;
         }
 
-        protected override void ApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
+        protected sealed override void ApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
+            DashboardHelper.EnsureSection("umbElasticsearch", "Elasticsearch",
+                "/App_Plugins/umbElasticsearch/umbElasticsearch.html");
+
             InstallServerVars();
         }
 
-        protected override void ApplicationInitialized(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
+        protected sealed override void ApplicationInitialized(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
             LogHelper.Info<SearchApplicationEventHandler<TSearchSettings>>(() => "Initialising configuration for Elasticsearch integration");
             Initialise(SearchSettings<TSearchSettings>.Current);
         }
 
-        protected override void ApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
+        protected sealed override void ApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
             foreach (var service in RegisterContentIndexingServices())
             {
@@ -117,7 +118,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             }
         }
 
-        private void InstallServerVars()
+        private static void InstallServerVars()
         {
             ServerVariablesParser.Parsing += (sender, serverVars) =>
             {

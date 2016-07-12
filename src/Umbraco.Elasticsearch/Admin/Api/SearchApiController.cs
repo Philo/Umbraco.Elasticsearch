@@ -1,12 +1,21 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http.Formatting;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web.Http;
+using Elasticsearch.Net.Serialization;
 using Nest;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Umbraco.Elasticsearch.Core;
 using Umbraco.Elasticsearch.Core.Content.Impl;
 using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Media.Impl;
+using Umbraco.Elasticsearch.Core.Utils;
 using Umbraco.Web.Editors;
 using Umbraco.Web.Mvc;
 
@@ -17,13 +26,17 @@ namespace Umbraco.Elasticsearch.Admin.Api
     {
         private readonly IElasticClient _client;
         private static Version _versionInfo;
-        
+        private readonly string _indexName;
+
         public SearchApiController(IElasticClient client)
         {
             _client = client;
         }
 
-        public SearchApiController() : this(UmbracoSearchFactory.Client) { }
+        public SearchApiController() : this(UmbracoSearchFactory.Client)
+        {
+            _indexName = UmbracoSearchFactory.Client.Infer.DefaultIndex;
+        }
 
         [HttpGet]
         public IHttpActionResult MediaIndexServicesList()
@@ -33,7 +46,8 @@ namespace Umbraco.Elasticsearch.Admin.Api
             return Ok(media.Select(x => new
             {
                 x.DocumentTypeName,
-                x.GetType().Name
+                x.GetType().Name,
+                Count = x.CountOfDocumentsForIndex(_indexName)
             }));
         }
 
@@ -46,7 +60,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
             {
                 x.DocumentTypeName,
                 x.GetType().Name,
-                Count = x.CountOfDocumentsForIndex(UmbracoSearchFactory.Client.Infer.DefaultIndex)
+                Count = x.CountOfDocumentsForIndex(_indexName)
             }));
         }
 
@@ -71,7 +85,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
         {
             var response = await _client.IndicesStatsAsync();
 
-            return response.Indices.Where(x => x.Key.StartsWith(_client.Infer.DefaultIndex)).Select(x => new
+            return response.Indices.Where(x => x.Key.StartsWith($"{_indexName}-")).Select(x => new
             {
                 Name = x.Key,
                 DocCount = x.Value.Total.Documents.Count,
@@ -83,16 +97,16 @@ namespace Umbraco.Elasticsearch.Admin.Api
 
         private bool GetStatus(string indexName)
         {
-            return _client.AliasExists(x => x.Index(indexName).Name(_client.Infer.DefaultIndex)).Exists;
+            return _client.AliasExists(x => x.Index(indexName).Name(_indexName)).Exists;
         }
         
         [HttpPost]
-        public IHttpActionResult CreateIndex()
+        public async Task<IHttpActionResult> CreateIndex()
         {
             var manager = new IndexManager();
             try
             {
-                manager.Create();
+                await manager.CreateAsync();
                 return Ok();
             }
             catch (Exception ex)
@@ -140,6 +154,50 @@ namespace Umbraco.Elasticsearch.Admin.Api
                 }
             }
             return _versionInfo;
+        }
+
+        [HttpGet]
+        public async Task<IHttpActionResult> Ping()
+        {
+            try
+            {
+                var result = await UmbracoSearchFactory.IsActiveAsync();
+                return Ok(new
+                {
+                    active = result
+                });
+            }
+            catch
+            {
+                return Ok(false);
+            }
+        }
+
+        [HttpGet]
+        public IHttpActionResult PluginVersionInfo()
+        {
+            var pluginVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "N/A";
+            var umbracoVersion = "umbracoConfigurationStatus".FromAppSettings();
+            return Ok(new
+            {
+                pluginVersion,
+                umbracoVersion
+            });
+        }
+
+        [HttpPost]
+        public async Task<IHttpActionResult> GetIndexInfo([FromBody] string indexName)
+        {
+            var response = await _client.GetMappingAsync(new GetMappingRequest(indexName, "*"));
+
+            if (response.IsValid)
+            {
+                var mapping = response.Mappings;
+                var raw = _client.Serializer.Serialize(mapping);
+                return Ok(JObject.Parse(UTF8Encoding.UTF8.GetString(raw)));
+            }
+            
+            return BadRequest("unable to retrieve index information");
         }
     }
 }

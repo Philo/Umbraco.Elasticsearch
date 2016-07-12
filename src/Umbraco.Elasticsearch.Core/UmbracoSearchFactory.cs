@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Threading.Tasks;
 using Nest;
 using Nest.Indexify;
-using Nest.Queryify.Abstractions;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Elasticsearch.Core.Content;
@@ -14,7 +14,6 @@ namespace Umbraco.Elasticsearch.Core
 {
     public static class UmbracoSearchFactory
     {
-        private static IElasticsearchRepository _repository;
         private static IElasticClient _client;
 
         private readonly static IDictionary<IContentIndexService, Func<IContent, bool>> ContentIndexServiceRegistry = new Dictionary<IContentIndexService, Func<IContent, bool>>();
@@ -79,15 +78,6 @@ namespace Umbraco.Elasticsearch.Core
             return ContentIndexServiceRegistry?.FirstOrDefault(x => x.Value(content)).Key;
         }
 
-        public static IElasticsearchRepository Repository
-        {
-            get
-            {
-                if(_repository == null) throw new ConfigurationErrorsException("Elasticsearch repository is not available, verify configuration settings");
-                return _repository;
-            }
-        }
-
         public static IElasticClient Client
         {
             get
@@ -96,15 +86,16 @@ namespace Umbraco.Elasticsearch.Core
                 return _client;
             }
         }
-
-        public static void SetDefaultRepository(IElasticsearchRepository repository)
-        {
-            _repository = repository;
-        }
-
+        
         public static void SetDefaultClient(IElasticClient client)
         {
             _client = client;
+        }
+
+        public static async Task<bool> IsActiveAsync()
+        {
+            var response = await _client.PingAsync();
+            return response?.IsValid ?? false;
         }
     }
 }

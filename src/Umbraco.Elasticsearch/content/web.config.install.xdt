@@ -11,9 +11,9 @@
       </xs:complexType>
     </xs:element>
   </xs:schema>
-  <appSettings>
+  <appSettings xdt:Transform="InsertIfMissing">
     <add key="umbElasticsearch:Host" value="http://localhost:9200" xdt:Transform="InsertIfMissing" xdt:Locator="Match(key)" />
-    <add key="umbElasticsearch:IndexName" value="umb-search" xdt:Transform="InsertIfMissing" xdt:Locator="Match(key)" />
+    <add key="umbElasticsearch:IndexName" value="umb-elasticsearch" xdt:Transform="InsertIfMissing" xdt:Locator="Match(key)" />
     <add key="umbElasticsearch:IndexEnvironmentPrefix" value="%COMPUTERNAME%" xdt:Transform="InsertIfMissing" xdt:Locator="Match(key)" />
   </appSettings>
 </configuration>

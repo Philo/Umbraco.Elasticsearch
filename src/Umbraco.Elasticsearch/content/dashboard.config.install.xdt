@@ -16,6 +16,9 @@
       <area>developer</area>
     </areas>
     <tab caption="Elasticsearch">
+      <access>
+        <grant>admin</grant>
+      </access>      
       <control>
         /App_Plugins/umbElasticsearch/umbElasticsearch.html
       </control>
