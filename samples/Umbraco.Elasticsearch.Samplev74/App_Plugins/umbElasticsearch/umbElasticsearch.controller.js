@@ -62,11 +62,17 @@
     $scope.rebuildContentIndex = function (indexName) {
         $scope.busy = true;
         notificationsService.success('Rebuilding Content Index', 'Content Index rebuild has started');
+        var refresher = $timeout(function () {
+            $scope.getIndicesInfo();
+        }, 5000);
+
         umbElasticsearchResource.rebuildContentIndex(indexName).then(function () {
+            $timeout.cancel(refresher);
             $scope.busy = false;
             notificationsService.success("Content Index Rebuild", "Content Index rebuild completed");
             $scope.getIndicesInfo();
         }, function () {
+            $timeout.cancel(refresher);
             $scope.busy = false;
             notificationsService.error("Content Index Rebuild", "Content Index Rebuild Failed");
             $scope.getIndicesInfo();
@@ -76,11 +82,18 @@
     $scope.rebuildMediaIndex = function (indexName) {
         $scope.busy = true;
         notificationsService.success('Rebuilding Media Index', 'Media Index rebuild has started');
+
+        var refresher = $timeout(function () {
+            $scope.getIndicesInfo();
+        }, 5000);
+
         umbElasticsearchResource.rebuildMediaIndex(indexName).then(function () {
+            $timeout.cancel(refresher);
             $scope.busy = false;
             notificationsService.success("Media Index Rebuild", "Index rebuild completed");
             $scope.getIndicesInfo();
         }, function () {
+            $timeout.cancel(refresher);
             $scope.busy = false;
             notificationsService.error("Media Index Rebuild", "Media Index Rebuild Failed");
             $scope.getIndicesInfo();

@@ -85,7 +85,7 @@
                 <span data-ng-hide="contentServices" style="font-style: italic">No media indexing services registered</span>
                 <ul data-ng-show="contentServices">
                     <li data-ng-repeat="service in contentServices">
-                        <strong>{{service.DocumentTypeName}}</strong> via <strong>{{service.Name}}</strong> (Docs: {{service.Count}})
+                        <strong>{{service.DocumentTypeName}}</strong> via <strong>{{service.Name}}</strong> <span data-ng-hide="service.Count < 0">(Docs: {{service.Count}})</span>
                     </li>
                 </ul>
             </fieldset>
@@ -94,7 +94,7 @@
                 <span data-ng-hide="mediaServices" style="font-style: italic">No media indexing services registered</span>
                 <ul data-ng-show="mediaServices">
                     <li data-ng-repeat="service in mediaServices">
-                        <strong>{{service.DocumentTypeName}}</strong> via <strong>{{service.Name}}</strong> (Docs: {{service.Count}})
+                        <strong>{{service.DocumentTypeName}}</strong> via <strong>{{service.Name}}</strong> <span data-ng-hide="service.Count < 0">(Docs: {{service.Count}})</span>
                     </li>
                 </ul>
             </fieldset>
