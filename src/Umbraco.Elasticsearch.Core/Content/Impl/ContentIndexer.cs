@@ -15,7 +15,7 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
                     try
                     {
                         LogHelper.Info<ContentIndexer>($"Started to index content for {indexService.DocumentTypeName}");
-                        BusyStateManager.UpdateMessage($"Indexing {indexService.DocumentTypeName} (Elapsed: {BusyStateManager.Elapsed.TotalSeconds} seconds)");
+                        BusyStateManager.UpdateMessage($"Indexing {indexService.DocumentTypeName}");
                         indexService.Build(indexName);
                     }
                     catch (Exception ex)
