@@ -6,13 +6,16 @@ using Nest;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
+using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Utils;
 using Umbraco.Web;
 
 namespace Umbraco.Elasticsearch.Core.Impl
 {
-    public abstract class IndexService<TUmbracoDocument, TUmbracoEntity> : IIndexService<TUmbracoEntity>
-        where TUmbracoEntity : class, IContentBase where TUmbracoDocument : class, IUmbracoDocument, new()
+    public abstract class IndexService<TUmbracoDocument, TUmbracoEntity, TSearchSettings> : IIndexService<TUmbracoEntity>
+        where TUmbracoEntity : class, IContentBase 
+        where TUmbracoDocument : class, IUmbracoDocument, new()
+        where TSearchSettings : ISearchSettings
     {
         private readonly IElasticClient _client;
         private readonly UmbracoContext _umbracoContext;
@@ -20,18 +23,21 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         protected string IndexTypeName => _indexTypeName.Value;
 
+        [Obsolete("Bad usage, the UmbracoHelper should be created as needed and not be a long lived instance", true)]
         protected UmbracoHelper Helper { get; }
 
-        protected IndexService(IElasticClient client, UmbracoContext umbracoContext)
+        protected TSearchSettings SearchSettings { get; }
+
+        protected IndexService(IElasticClient client, UmbracoContext umbracoContext, TSearchSettings searchSettings)
         {
             _client = client;
             _umbracoContext = umbracoContext;
+            SearchSettings = searchSettings;
             _indexTypeName = new Lazy<string>(InitialiseIndexTypeName);
-            Helper = new UmbracoHelper(umbracoContext);
         }
 
-        protected IndexService()
-            : this(UmbracoSearchFactory.Client, UmbracoContext.Current)
+        protected IndexService(TSearchSettings searchSettings)
+            : this(UmbracoSearchFactory.Client, UmbracoContext.Current, searchSettings)
         {
         }
 
@@ -71,13 +77,6 @@ namespace Umbraco.Elasticsearch.Core.Impl
             }
         }
 
-        /*
-        public void ClearIndexType(string indexName)
-        {
-            _repository.Query(new DeleteAllOfDocumentTypeQuery<TUmbracoDocument>(), indexName);
-            UpdateIndexTypeMapping(indexName);
-        } */
-
         public string EntityTypeName { get; } = typeof (TUmbracoDocument).Name;
 
         public string DocumentTypeName { get; } =
@@ -104,12 +103,12 @@ namespace Umbraco.Elasticsearch.Core.Impl
             }
         }
 
-        protected virtual void AddOrUpdateIndex(IList<TUmbracoDocument> docs, string indexName)
+        protected virtual void AddOrUpdateIndex(IList<TUmbracoDocument> docs, string indexName, int pageSize = 500)
         {
             if (docs.Any())
             {
                 LogHelper.Info(GetType(), () => $"Indexing {docs.Count} {DocumentTypeName} documents into {indexName}");
-                foreach (var page in docs.Page(1000))
+                foreach (var page in docs.Page(pageSize))
                 {
                     var response = _client.Bulk(b => b.IndexMany(page.ToList(), (desc, doc) => desc.Index(indexName).Id(doc.Id)).Refresh());
                     if (response.Errors)
@@ -122,14 +121,34 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         }
 
-        public void Build(string indexName)
+        public void Build(string indexName, Func<ServiceContext, IEnumerable<TUmbracoEntity>> customRetrieveFunc = null)
         {
-            var contentList = RetrieveIndexItems(_umbracoContext.Application.Services).ToList();
+            var pageSize = IndexBatchSize;
+            IEnumerable<TUmbracoEntity> retrievedItems;
 
-            var contentGroups = contentList.ToLookup(IsExcludedFromIndex, c => c);
-            RemoveFromIndex(contentGroups[true].Select(x => x.Id.ToString()).ToList(), indexName);
-            AddOrUpdateIndex(contentGroups[false].Select(CreateCore).Where(x => x != null).ToList(), indexName);
+            if (customRetrieveFunc != null)
+            {
+                LogHelper.Info(GetType(),
+                    () => $"Starting to index [{DocumentTypeName}] into {indexName} using custom content retriever");
+                retrievedItems = customRetrieveFunc(_umbracoContext.Application.Services);
+            }
+            else
+            {
+                LogHelper.Info(GetType(), () => $"Starting to index [{DocumentTypeName}] into {indexName}");
+                retrievedItems = RetrieveIndexItems(_umbracoContext.Application.Services);
+            }
+            
+            foreach (var contentList in retrievedItems.Page(pageSize))
+            {
+                var contentGroups = contentList.ToLookup(IsExcludedFromIndex, c => c);
+                RemoveFromIndex(contentGroups[true].Select(x => x.Id.ToString()).ToList(), indexName);
+                AddOrUpdateIndex(contentGroups[false].Select(CreateCore).Where(x => x != null).ToList(), indexName, pageSize);
+            }
+
+            LogHelper.Info(GetType(), () => $"Finished indexing [{DocumentTypeName}] into {indexName}");
         }
+
+        protected virtual int IndexBatchSize => SearchSettings.GetAdditionalData(UmbElasticsearchConstants.Configuration.IndexBatchSize, 500);
 
         protected abstract void Create(TUmbracoDocument doc, TUmbracoEntity entity);
 
@@ -176,15 +195,15 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         public virtual bool IsExcludedFromIndex(TUmbracoEntity entity)
         {
-            return entity.HasProperty("umbElasticsearchExcludeFromIndex") &&
-                   entity.GetValue<bool>("umbElasticsearchExcludeFromIndex");
+            var propertyAlias = SearchSettings.GetAdditionalData(UmbElasticsearchConstants.Configuration.ExcludeFromIndexPropertyAlias, UmbElasticsearchConstants.Properties.ExcludeFromIndexAlias);
+            return entity.HasProperty(propertyAlias) && entity.GetValue<bool>(propertyAlias);
         }
 
         public abstract bool ShouldIndex(TUmbracoEntity entity);
 
         protected virtual string UrlFor(TUmbracoEntity contentInstance)
         {
-            return Helper.Url(contentInstance.Id);
+            return UmbracoContext.Current.UrlProvider.GetUrl(contentInstance.Id);
         }
 
         protected virtual string IdFor(TUmbracoEntity contentInstance)

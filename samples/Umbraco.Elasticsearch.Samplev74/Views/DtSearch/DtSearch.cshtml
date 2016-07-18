@@ -6,7 +6,7 @@
         @foreach (var item in Model.Results.Documents)
         {
             <li>
-                <h4>@item.Title</h4>
+                <h4><a href="@item.Url">@item.Title</a></h4>
                 <span>@item.Summary</span>
             </li>
         }

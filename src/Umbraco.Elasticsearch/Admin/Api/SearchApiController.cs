@@ -177,7 +177,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
         public IHttpActionResult PluginVersionInfo()
         {
             var pluginVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "N/A";
-            var umbracoVersion = "umbracoConfigurationStatus".FromAppSettings();
+            var umbracoVersion = "umbracoConfigurationStatus".FromAppSettings("N/A");
             return Ok(new
             {
                 pluginVersion,

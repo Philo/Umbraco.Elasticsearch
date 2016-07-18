@@ -73,9 +73,28 @@ namespace Umbraco.Elasticsearch.Core
             return MediaIndexServiceRegistry?.FirstOrDefault(x => x.Value(media)).Key;
         }
 
+        public static IMediaIndexService GetMediaIndexService(Func<IMediaIndexService, bool> predicate)
+        {
+            return MediaIndexServiceRegistry?.Keys.FirstOrDefault(predicate);
+        }
+
+        public static IMediaIndexService GetMediaIndexService(string documentTypeName)
+        {
+            return MediaIndexServiceRegistry?.Keys.FirstOrDefault(x => x.DocumentTypeName.Equals(documentTypeName, StringComparison.InvariantCultureIgnoreCase));
+        }
+
         public static IContentIndexService GetContentIndexService(IContent content)
         {
             return ContentIndexServiceRegistry?.FirstOrDefault(x => x.Value(content)).Key;
+        }
+
+        public static IContentIndexService GetContentIndexService(Func<IContentIndexService, bool> predicate)
+        {
+            return ContentIndexServiceRegistry?.Keys.FirstOrDefault(predicate);
+        }
+        public static IContentIndexService GetContentIndexService(string documentTypeName)
+        {
+            return ContentIndexServiceRegistry?.Keys.FirstOrDefault(x => x.DocumentTypeName.Equals(documentTypeName, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public static IElasticClient Client

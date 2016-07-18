@@ -9,7 +9,7 @@ namespace Umbraco.Elasticsearch.Core.Config
 {
     public class FromConfigSearchSettings : ISearchSettings
     {
-        private const string Prefix = "umbElasticsearch:";
+        private readonly static string Prefix = $"{UmbElasticsearchConstants.Configuration.Prefix}:";
 
         public string Host { get; } = nameof(Host).FromAppSettingsWithPrefix(Prefix, "http://localhost:9200");
 
@@ -25,7 +25,7 @@ namespace Umbraco.Elasticsearch.Core.Config
 
         public IEnumerable<KeyValuePair<string, string>> AdditionalData { get; } = GetAdditionalData($"{Prefix}{nameof(AdditionalData)}:");
 
-        private static IEnumerable<KeyValuePair<string, string>> GetAdditionalData(string prefix = Prefix)
+        private static IEnumerable<KeyValuePair<string, string>> GetAdditionalData(string prefix)
         {
             var keys = ConfigurationManager.AppSettings.AllKeys.Where(x => x.StartsWith(prefix)).ToList();
             return keys.Select(appKey =>

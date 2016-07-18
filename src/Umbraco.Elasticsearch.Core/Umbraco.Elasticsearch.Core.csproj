@@ -298,6 +298,7 @@
     <Compile Include="Config\ISearchIndexNameResolver.cs" />
     <Compile Include="Config\ISearchSettings.cs" />
     <Compile Include="Config\SearchSettings.cs" />
+    <Compile Include="Config\UmbElasticsearchConstants.cs" />
     <Compile Include="Content\IContentIndexService.cs" />
     <Compile Include="Content\Impl\ContentIndexer.cs" />
     <Compile Include="Content\Impl\ContentIndexService.cs" />
