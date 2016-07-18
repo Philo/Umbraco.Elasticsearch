@@ -291,10 +291,11 @@
     <Compile Include="..\..\VersionAssemblyInfo.cs">
       <Link>Properties\VersionAssemblyInfo.cs</Link>
     </Compile>
+    <Content Include="content\App_Plugins\umbElasticsearch\umbElasticsearch.css" />
     <Content Include="readme.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Compile Include="Admin\Api\SearchApiController.cs" />
+    <Compile Include="Admin\Api\UmbElasticsearchIndexingController.cs" />
     <Compile Include="Admin\Events\SearchApplicationInstallServerVarsEventHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

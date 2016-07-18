@@ -1,6 +1,9 @@
 ﻿{
-	javascript: [
-		'~/App_Plugins/umbElasticsearch/umbElasticsearch.resource.js',
-		'~/App_Plugins/umbElasticsearch/umbElasticsearch.controller.js'
-	]
+  javascript: [
+    "~/App_Plugins/umbElasticsearch/umbElasticsearch.resource.js",
+    "~/App_Plugins/umbElasticsearch/umbElasticsearch.controller.js"
+  ],
+  "css": [
+    "~/App_Plugins/umbElasticsearch/umbElasticsearch.css"
+  ]
 }

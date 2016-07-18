@@ -292,6 +292,7 @@
     <Compile Include="..\..\VersionAssemblyInfo.cs">
       <Link>Properties\VersionAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="BusyStateManager.cs" />
     <Compile Include="Config\DashboardHelper.cs" />
     <Compile Include="Config\DefaultIndexNameResolver.cs" />
     <Compile Include="Config\FromConfigSearchSettings.cs" />
@@ -302,6 +303,7 @@
     <Compile Include="Content\IContentIndexService.cs" />
     <Compile Include="Content\Impl\ContentIndexer.cs" />
     <Compile Include="Content\Impl\ContentIndexService.cs" />
+    <Compile Include="Impl\AliasedIndexContributor.cs" />
     <Compile Include="Impl\IndexService.cs" />
     <Compile Include="EventHandlers\SearchApplicationEventHandler_Base.cs" />
     <Compile Include="EventHandlers\SearchApplicationEventHandler_Configure.cs" />
@@ -316,6 +318,7 @@
     <Compile Include="Media\IMediaIndexService.cs" />
     <Compile Include="Media\Impl\MediaIndexer.cs" />
     <Compile Include="Media\Impl\MediaIndexService.cs" />
+    <Compile Include="Config\PluginVersionInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UmbracoSearchFactory.cs" />
     <Compile Include="Utils\ConfigurationManagerUtils.cs" />

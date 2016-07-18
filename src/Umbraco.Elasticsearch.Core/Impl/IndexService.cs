@@ -108,13 +108,10 @@ namespace Umbraco.Elasticsearch.Core.Impl
             if (docs.Any())
             {
                 LogHelper.Info(GetType(), () => $"Indexing {docs.Count} {DocumentTypeName} documents into {indexName}");
-                foreach (var page in docs.Page(pageSize))
+                var response = _client.Bulk(b => b.IndexMany(docs, (desc, doc) => desc.Index(indexName).Id(doc.Id)));
+                if (response.Errors)
                 {
-                    var response = _client.Bulk(b => b.IndexMany(page.ToList(), (desc, doc) => desc.Index(indexName).Id(doc.Id)).Refresh());
-                    if (response.Errors)
-                    {
-                        LogHelper.Warn(GetType(), $"There were errors during bulk indexing, {response.ItemsWithErrors.Count()} items failed");
-                    }
+                    LogHelper.Warn(GetType(), $"There were errors during bulk indexing, {response.ItemsWithErrors.Count()} items failed");
                 }
                 LogHelper.Info(GetType(), () => $"Finished indexing {docs.Count} {DocumentTypeName} documents into {indexName}");
             }
@@ -124,19 +121,8 @@ namespace Umbraco.Elasticsearch.Core.Impl
         public void Build(string indexName, Func<ServiceContext, IEnumerable<TUmbracoEntity>> customRetrieveFunc = null)
         {
             var pageSize = IndexBatchSize;
-            IEnumerable<TUmbracoEntity> retrievedItems;
-
-            if (customRetrieveFunc != null)
-            {
-                LogHelper.Info(GetType(),
-                    () => $"Starting to index [{DocumentTypeName}] into {indexName} using custom content retriever");
-                retrievedItems = customRetrieveFunc(_umbracoContext.Application.Services);
-            }
-            else
-            {
-                LogHelper.Info(GetType(), () => $"Starting to index [{DocumentTypeName}] into {indexName}");
-                retrievedItems = RetrieveIndexItems(_umbracoContext.Application.Services);
-            }
+            LogHelper.Info(GetType(), () => $"Starting to index [{DocumentTypeName}] into {indexName} (custom retrieval: {customRetrieveFunc != null})");
+            var retrievedItems = customRetrieveFunc?.Invoke(_umbracoContext.Application.Services) ?? RetrieveIndexItems(_umbracoContext.Application.Services);
             
             foreach (var contentList in retrievedItems.Page(pageSize))
             {
@@ -144,6 +130,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
                 RemoveFromIndex(contentGroups[true].Select(x => x.Id.ToString()).ToList(), indexName);
                 AddOrUpdateIndex(contentGroups[false].Select(CreateCore).Where(x => x != null).ToList(), indexName, pageSize);
             }
+            _client.Refresh(i => i.Index(indexName));
 
             LogHelper.Info(GetType(), () => $"Finished indexing [{DocumentTypeName}] into {indexName}");
         }

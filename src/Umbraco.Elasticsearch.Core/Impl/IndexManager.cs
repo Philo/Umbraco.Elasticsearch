@@ -1,71 +1,114 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Nest;
-using Nest.Indexify.Contributors;
+using Nest.Indexify;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 using Umbraco.Core.Logging;
+using Umbraco.Web;
 
 namespace Umbraco.Elasticsearch.Core.Impl
 {
+    public enum IndexStatusOption
+    {
+        None,
+        Active,
+        Busy
+    }
+
+    public struct IndexStatusInfo
+    {
+        public string Name { get; set; }
+        public long DocCount { get; set; }
+        public long Queries { get; set; }
+        public double SizeInBytes { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public IndexStatusOption Status { get; set; }
+    }
+
     public class IndexManager : IIndexManager {
+        private readonly IElasticClient _client;
+        private readonly IElasticsearchIndexCreationStrategy _indexStrategy;
+
+        public IndexManager() : this(UmbracoSearchFactory.Client, UmbracoSearchFactory.GetIndexStrategy()) { }
+
+        public IndexManager(IElasticClient client, IElasticsearchIndexCreationStrategy indexStrategy)
+        {
+            _client = client;
+            _indexStrategy = indexStrategy;
+        }
+
         public async Task CreateAsync(bool activate = false)
         {
-            var strategy = UmbracoSearchFactory.GetIndexStrategy();
             var aliasContributor = new AliasedIndexContributor(activate);
             aliasContributor.OnSuccessEventHandler += 
                 (sender, args) =>
                     LogHelper.Info<IndexManager>(
                         $"Search index '{args.IndexAliasedTo}' has been created (activated: {args.Activated})");
 
-            await strategy.CreateAsync(aliasContributor);
+            await _indexStrategy.CreateAsync(aliasContributor);
         }
-    }
-
-    internal class AliasedIndexContributor : ElasticsearchIndexCreationContributor, IElasticsearchIndexPreCreationContributor, IElasticsearchIndexCreationSuccessContributor
-    {
-        public class AliasedIndexSuccessEventArgs : EventArgs
+        
+        public async Task DeleteIndexAsync(string indexName)
         {
-            public string IndexAliasedTo { get; }
-            public bool Activated { get; }
-            internal AliasedIndexSuccessEventArgs(string indexAliasedTo, bool activated)
+            using (
+                BusyStateManager.Start(
+                    $"Deleting {indexName} triggered by '{UmbracoContext.Current.Security.CurrentUser.Name}'", indexName))
             {
-                IndexAliasedTo = indexAliasedTo;
-                Activated = activated;
+                await _client.DeleteIndexAsync(d => d.Index(indexName));
             }
         }
 
-        private string _indexAliasedTo;
-        private readonly bool _activate;
-        public event EventHandler<AliasedIndexSuccessEventArgs> OnSuccessEventHandler;
-
-        public AliasedIndexContributor(bool activate = false)
+        public async Task<IEnumerable<IndexStatusInfo>> IndicesInfo()
         {
-            _activate = activate;
-        }
-
-        public override void ContributeCore(CreateIndexDescriptor descriptor, IElasticClient client)
-        {
-        }
-
-        public string OnPreCreate(IElasticClient client, string indexName)
-        {
-            _indexAliasedTo = _indexAliasedTo ?? $"{indexName}-{DateTime.UtcNow.ToString("yyyyMMddHHmmss")}";
-            return _indexAliasedTo;
-        }
-
-        public void OnSuccess(IElasticClient client, IIndicesOperationResponse response)
-        {
-            if (_activate)
+            var response = await _client.IndicesStatsAsync();
+            var indexAliasName = _client.Infer.DefaultIndex;
+            return response.Indices.Where(x => x.Key.StartsWith($"{indexAliasName}-")).Select(x => new IndexStatusInfo
             {
-                var indexName = client.Infer.DefaultIndex;
-                client.Alias(a => a
-                    .Remove(r => r.Alias(indexName).Index($"{indexName}*"))
-                    .Add(aa => aa.Alias(indexName).Index(_indexAliasedTo))
+                Name = x.Key,
+                DocCount = x.Value.Total.Documents.Count,
+                Queries = x.Value.Total.Search.QueryTotal,
+                SizeInBytes = x.Value.Total.Store.SizeInBytes,
+                Status = GetStatus(x.Key)
+            });
+        }
+
+        public async Task<Version> GetElasticsearchVersion()
+        {
+            var info = await _client.RootNodeInfoAsync();
+            return Version.Parse(info.IsValid ? info.Version.Number : "0.0.0");
+        }
+
+        public async Task<JObject> GetIndexMappingInfo(string indexName)
+        {
+            var response = await _client.GetMappingAsync(new GetMappingRequest(indexName, "*"));
+
+            var mappings = response.IsValid ? response.Mappings : new Dictionary<string, IList<TypeMapping>>();
+            var raw = _client.Serializer.Serialize(mappings);
+            return JObject.Parse(Encoding.UTF8.GetString(raw));
+        }
+
+        private IndexStatusOption GetStatus(string indexName)
+        {
+            if (BusyStateManager.IsBusy && BusyStateManager.IndexName.Equals(indexName, StringComparison.InvariantCultureIgnoreCase)) return IndexStatusOption.Busy;
+            return _client.AliasExists(x => x.Index(indexName).Name(_client.Infer.DefaultIndex)).Exists ? IndexStatusOption.Active : IndexStatusOption.None;
+        }
+
+        public async Task ActivateIndexAsync(string indexName)
+        {
+            using (BusyStateManager.Start($"Activating {indexName} triggered by '{UmbracoContext.Current.Security.CurrentUser.Name}'", indexName))
+            {
+                var client = UmbracoSearchFactory.Client;
+                var indexAliasName = client.Infer.DefaultIndex;
+                await client.AliasAsync(a => a
+                    .Remove(r => r.Alias(indexAliasName).Index($"{indexAliasName}*"))
+                    .Add(aa => aa.Alias(indexAliasName).Index(indexName))
                     );
             }
-            Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping(_indexAliasedTo));
-            Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping(_indexAliasedTo));
-            OnSuccessEventHandler?.Invoke(this, new AliasedIndexSuccessEventArgs(_indexAliasedTo, _activate));
         }
     }
-
 }

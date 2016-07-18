@@ -3,7 +3,7 @@
         <p style="font-style: italic; color: red">The Elasticsearch integration is not active</p>
 
         <p>Please see the integration instructions for further information</p>
-        <hr/>
+        <hr />
     </div>
     <div data-ng-show="available">
         <div class="tab-content" data-ng-show="indexInfo">
@@ -18,50 +18,57 @@
                 <legend><i class="icon icon-search"></i> Index information</legend>
                 <div class="umb-sub-header">
                     <button class="btn btn-info btn-icon icon-refresh" data-ng-click="refreshIndexList()" title="refresh indices list"></button>
-                    <button data-ng-disabled="busy" class="btn btn-warning btn-icon icon-add" data-ng-click="addIndex()" title="add index"></button>
+                    <button data-ng-disabled="isBusy()" class="btn btn-warning btn-icon icon-add" data-ng-click="addIndex()" title="add index"></button>
                 </div>
 
                 <div class="umb-tab-pane-inner">
                     <div class="umb-listview">
                         <table class="table table-striped">
                             <thead>
-                            <tr>
-                                <td>Name</td>
-                                <td>Documents</td>
-                                <td>Queries</td>
-                                <td>Status</td>
-                                <td>Actions</td>
-                            </tr>
+                                <tr>
+                                    <td>&nbsp;</td>
+                                    <td>Name</td>
+                                    <td>Documents</td>
+                                    <td>Queries</td>
+                                    <td>Actions</td>
+                                </tr>
                             </thead>
                             <tbody>
-                            <tr data-ng-hide="info">
-                                <td colspan="5" style="text-align: center; background-color: khaki">
-                                    <span style="font-style: italic; text-align: center">Unable to find indices matching known index pattern, use the <strong>add index</strong> option</span>
-                                </td>
-                            </tr>
-                            <tr data-ng-show="info" ng-repeat="item in info track by item.Name" data-ng-style="item.Status == 'Active' ? {'font-weight': 'bold'} : {}">
-                                <td data-ng-bind="item.Name"></td>
-                                <td data-ng-bind="item.DocCount"></td>
-                                <td data-ng-bind="item.Queries"></td>
-                                <td><span class="text-success" data-ng-bind="item.Status"></span></td>
-                                <td>
-                                    <div>
-                                        <span>
-                                            <button title="view index mapping information" data-ng-click="viewIndexInfo(item.Name)" class="pull-right btn btn-icon btn-info btn-small icon-info"></button>
-                                        </span>
-                                        <span class="btn-group">
-                                            <button title="populates the index with all eligible content nodes" data-ng-show="item.Status != 'Active'" data-ng-disabled="busy" data-ng-click="rebuildContentIndex(item.Name)" class="btn btn-small btn-primary">Build Content</button>
-                                            <button title="populates the index with all eligible media nodes" data-ng-show="item.Status != 'Active'" data-ng-disabled="busy" data-ng-click="rebuildMediaIndex(item.Name)" class="btn btn-small btn-primary">Build Media</button>
-                                        </span>
-                                        <span class="btn-group">
-                                                <button title="Activate this index, once complete this index will be the default index queried" data-ng-show="item.Status != 'Active'" data-ng-disabled="busy" data-ng-click="activateIndex(item.Name)" data-confirm-click="Are you sure you want to activate this index?" class="btn btn-small btn-info icon icon-check"></button>
+                                <tr data-ng-hide="info">
+                                    <td colspan="5" style="text-align: center; background-color: khaki">
+                                        <span style="font-style: italic; text-align: center">Unable to find indices matching known index pattern, use the <strong>add index</strong> option</span>
+                                    </td>
+                                </tr>
+                                <tr data-ng-show="info" ng-repeat="item in info track by item.Name" data-ng-style="setIndexStatusRowStyle(item)">
+                                    <td><abbr style="font-size: large" title="{{ item.Status }}" data-ng-class="setIndexStatusStyle(item)"></abbr></td>
+                                    <td data-ng-bind="item.Name"></td>
+                                    <td data-ng-bind="item.DocCount"></td>
+                                    <td data-ng-bind="item.Queries"></td>
+                                    <td>
+                                        <div>
+                                            <span>
+                                                <button title="view index mapping information" data-ng-click="viewIndexInfo(item.Name)" class="pull-right btn btn-icon btn-info btn-small icon-info"></button>
                                             </span>
-                                        <span data-ng-hide="item.Status == 'Active'">
-                                                <button title="This will delete the index, this action can not be undone" data-ng-disabled="busy" data-ng-click="deleteIndex(item.Name)" data-confirm-click="You are about to delete [{{item.Name}}], are you sure?"  class="btn btn-small btn-danger icon icon-delete"></button>
+                                            <span data-ng-if="item.Status != 'Active'" data-ng-disabled="isBusy()">
+                                                <span class="btn-group">
+                                                    <button title="Activate this index, once complete this index will be the default index queried" data-ng-disabled="isBusy()" data-ng-click="activateIndex(item.Name)" data-confirm-click="Are you sure you want to activate this index?" class="btn btn-small btn-info icon icon-check"></button>
+                                                    <button title="This will delete the index, this action can not be undone" data-ng-disabled="isBusy()" data-ng-click="deleteIndex(item.Name)" data-confirm-click="You are about to delete [{{item.Name}}], are you sure?" class="btn btn-small btn-danger icon icon-delete"></button>
+                                                </span>
+                                                <span class="btn-group">
+                                                    <button title="populates the index with all eligible content nodes" data-ng-disabled="isBusy()" data-ng-click="rebuildContentIndex(item.Name)" class="btn btn-small btn-primary icon icon-umb-content"></button>
+                                                    <button title="populates the index with all eligible media nodes" data-ng-disabled="isBusy()" data-ng-click="rebuildMediaIndex(item.Name)" class="btn btn-small btn-primary icon icon-umb-media"></button>
+                                                </span>
                                             </span>
-                                    </div>
-                                </td>
-                            </tr>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr data-ng-show="isBusy()">
+                                    <th colspan="5">
+                                        <span style="font-style: italic" class="color-orange">
+                                            {{ busyState.Message }}
+                                        </span>
+                                    </th>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -100,5 +107,5 @@
             </fieldset>
         </div>
     </div>
-    <span class="pull-right"><small>{{pluginVersionInfo.pluginVersion}} <i>({{pluginVersionInfo.umbracoVersion}})</i></small></span>
+    <span class="pull-right"><small>{{pluginVersionInfo.PluginVersion}} <i>({{pluginVersionInfo.UmbracoVersion}})</i></small></span>
 </div>

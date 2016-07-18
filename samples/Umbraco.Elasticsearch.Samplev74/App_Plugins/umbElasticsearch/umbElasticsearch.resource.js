@@ -7,7 +7,7 @@ angular.module("umbraco.resources")
 
         return {
             getVersionNumber: function () {
-                return $http.get(apiUrl("SearchVersionInfo")).then(function (data) {
+                return $http.get(apiUrl("SearchVersionInfo")).then(function(data) {
                     return data.data.version;
                 });
             },
@@ -17,31 +17,31 @@ angular.module("umbraco.resources")
                 });
             },
             getIndicesInfo: function () {
-                return $http.get(apiUrl("IndicesInfo"));
+                return umbRequestHelper.resourcePromise($http.get(apiUrl("IndicesInfo")));
             },
             getIndexInfo: function (indexName) {
-                return $http.post(apiUrl("GetIndexInfo"), '"' + indexName + '"');
+                return umbRequestHelper.resourcePromise($http.post(apiUrl("GetIndexInfo"), '"' + indexName + '"'));
             },
             rebuildContentIndex: function (indexName) {
-                return $http.post(apiUrl("RebuildContentIndex"), '"' + indexName + '"');
+                return umbRequestHelper.resourcePromise($http.post(apiUrl("RebuildContentIndex"), '"' + indexName + '"'));
             },
             rebuildMediaIndex: function (indexName) {
-                return $http.post(apiUrl("RebuildMediaIndex"), '"' + indexName + '"');
+                return umbRequestHelper.resourcePromise($http.post(apiUrl("RebuildMediaIndex"), '"' + indexName + '"'));
             },
             createIndex: function () {
-                return $http.post(apiUrl("CreateIndex"));
+                return umbRequestHelper.resourcePromise($http.post(apiUrl("CreateIndex")));
             },
             deleteIndexByName: function (indexName) {
-                return $http.post(apiUrl("DeleteIndexByName"), '"' + indexName + '"');
+                return umbRequestHelper.resourcePromise($http.post(apiUrl("DeleteIndexByName"), '"' + indexName + '"'));
             },
             activateIndexByName: function (indexName) {
-                return $http.post(apiUrl("ActivateIndexByName"), '"' + indexName + '"');
+                return umbRequestHelper.resourcePromise($http.post(apiUrl("ActivateIndexByName"), '"' + indexName + '"'));
             },
             getContentIndexServices: function () {
-                return $http.get(apiUrl("ContentIndexServicesList"));
+                return umbRequestHelper.resourcePromise($http.get(apiUrl("ContentIndexServicesList")));
             },
             getMediaIndexServices: function () {
-                return $http.get(apiUrl("MediaIndexServicesList"));
+                return umbRequestHelper.resourcePromise($http.get(apiUrl("MediaIndexServicesList")));
             },
             getSettings: function () {
                 return Umbraco.Sys.ServerVariables.umbracoPlugins.umbElasticsearch;
@@ -50,6 +50,9 @@ angular.module("umbraco.resources")
                 return $http.get(apiUrl("Ping")).then(function (response) {
                     return response.data.active !== null && response.data.active === true;
                 });
+            },
+            isBusy: function () {
+                return umbRequestHelper.resourcePromise($http.get(apiUrl("IsBusy")));
             }
         };
     });

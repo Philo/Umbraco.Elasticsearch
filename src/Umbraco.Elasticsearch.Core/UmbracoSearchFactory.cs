@@ -2,13 +2,16 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Nest;
 using Nest.Indexify;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
+using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.Media;
+using Umbraco.Elasticsearch.Core.Utils;
 
 namespace Umbraco.Elasticsearch.Core
 {
@@ -115,6 +118,13 @@ namespace Umbraco.Elasticsearch.Core
         {
             var response = await _client.PingAsync();
             return response?.IsValid ?? false;
+        }
+
+        public static PluginVersionInfo GetVersion()
+        {
+            var pluginVersion = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "N/A";
+            var umbracoVersion = "umbracoConfigurationStatus".FromAppSettings("N/A");
+            return new PluginVersionInfo(pluginVersion,umbracoVersion);
         }
     }
 }

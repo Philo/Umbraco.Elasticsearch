@@ -1,40 +1,59 @@
-﻿function umbElasticsearchController($log, $scope, $timeout, notificationsService, umbElasticsearchResource, assetsService) {
+﻿function umbElasticsearchController($log, $scope, $timeout, notificationsService, umbElasticsearchResource, $q) {
+    var $poller;
+
+    function pollBusyState(interval) {
+        $timeout.cancel($poller);
+        $poller = $timeout(function poll() {
+            $scope.getIndicesInfo();
+            if ($scope.busy) {
+                $poller = $timeout(poll, interval);
+            }
+        }, interval);
+    }
+
+    function withBusyCheck(pollingInterval) {
+        var deferred = $q.defer();
+        umbElasticsearchResource.isBusy().then(function (busy) {
+            $scope.busy = busy;
+            if ($scope.busy) {
+                notificationsService.warning("Busy Operation Notification", "Another index operation is currently underway, you can not perform another operation until this is complete");
+                pollBusyState(pollingInterval || 30000);
+                deferred.reject(busy);
+            } else {
+                $scope.busy = !busy;
+                deferred.resolve(busy);
+            }
+        });
+        return deferred.promise;
+    }
 
     $scope.getContentServicesList = function () {
         umbElasticsearchResource.getContentIndexServices().then(function (data) {
-            $scope.contentServices = data.data;
+            $scope.contentServices = data;
         });
     };
 
     $scope.getMediaServicesList = function () {
         umbElasticsearchResource.getMediaIndexServices().then(function (data) {
-            $scope.mediaServices = data.data;
+            $scope.mediaServices = data;
         });
     };
 
-    $scope.deleteIndex = function (indexName) {
-        $scope.busy = true;
-        return umbElasticsearchResource.deleteIndexByName(indexName).then(function () {
+    $scope.deleteIndex = function(indexName) {
+        withBusyCheck(2000).then(function() {
+            return umbElasticsearchResource.deleteIndexByName(indexName);
+        }).always(function() {
             $scope.getIndicesInfo();
-            $scope.busy = false;
         });
-    };
-
-    $scope.buildIndex = function (indexName) {
-        $scope.busy = true;
-        return umbElasticsearchResource.buildIndexByName(indexName).then(function () {
-            $scope.getIndicesInfo();
-            $scope.busy = false;
-        });
-    };
+    }
 
     $scope.activateIndex = function (indexName) {
-        $scope.busy = true;
-        return umbElasticsearchResource.activateIndexByName(indexName).then(function () {
+        withBusyCheck(2000).then(function () {
+            return umbElasticsearchResource.activateIndexByName(indexName);
+        }).always(function() {
             $scope.getIndicesInfo();
             $scope.getContentServicesList();
             $scope.getMediaServicesList();
-            $scope.busy = false;
         });
     };
 
@@ -42,14 +61,20 @@
         $scope.indexInfo = null;
         $scope.indexName = null;
         return umbElasticsearchResource.getIndicesInfo().then(function (data) {
-            $scope.info = data.data;
+            $scope.info = data;
+            return umbElasticsearchResource.isBusy().then(function (busy) {
+                $scope.busy = busy;
+                if ($scope.busy) {
+                    pollBusyState(10000);
+                }
+            });
         });
     };
 
     $scope.viewIndexInfo = function (indexName) {
         return umbElasticsearchResource.getIndexInfo(indexName).then(function (data) {
             $scope.indexName = indexName;
-            $scope.indexInfo = data.data;
+            $scope.indexInfo = data;
         });
     };
 
@@ -60,42 +85,27 @@
     };
 
     $scope.rebuildContentIndex = function (indexName) {
-        $scope.busy = true;
-        notificationsService.success('Rebuilding Content Index', 'Content Index rebuild has started');
-        var refresher = $timeout(function () {
-            $scope.getIndicesInfo();
-        }, 5000);
-
-        umbElasticsearchResource.rebuildContentIndex(indexName).then(function () {
-            $timeout.cancel(refresher);
-            $scope.busy = false;
-            notificationsService.success("Content Index Rebuild", "Content Index rebuild completed");
-            $scope.getIndicesInfo();
-        }, function () {
-            $timeout.cancel(refresher);
-            $scope.busy = false;
-            notificationsService.error("Content Index Rebuild", "Content Index Rebuild Failed");
+        withBusyCheck(5000).then(function () {
+            notificationsService.success('Rebuilding Content Index', 'Content Index rebuild has started');
+            return umbElasticsearchResource.rebuildContentIndex(indexName).then(function () {
+                notificationsService.success("Content Index Rebuild", "Content Index rebuild completed");
+            }, function () {
+                notificationsService.error("Content Index Rebuild", "Content Index Rebuild Failed");
+            });
+        }).always(function() {
             $scope.getIndicesInfo();
         });
     };
 
     $scope.rebuildMediaIndex = function (indexName) {
-        $scope.busy = true;
-        notificationsService.success('Rebuilding Media Index', 'Media Index rebuild has started');
-
-        var refresher = $timeout(function () {
-            $scope.getIndicesInfo();
-        }, 5000);
-
-        umbElasticsearchResource.rebuildMediaIndex(indexName).then(function () {
-            $timeout.cancel(refresher);
-            $scope.busy = false;
-            notificationsService.success("Media Index Rebuild", "Index rebuild completed");
-            $scope.getIndicesInfo();
-        }, function () {
-            $timeout.cancel(refresher);
-            $scope.busy = false;
-            notificationsService.error("Media Index Rebuild", "Media Index Rebuild Failed");
+        withBusyCheck(5000).then(function () {
+            notificationsService.success('Rebuilding Media Index', 'Media Index rebuild has started');
+            return umbElasticsearchResource.rebuildMediaIndex(indexName).then(function () {
+                notificationsService.success("Media Index Rebuild", "Media Index rebuild completed");
+            }, function () {
+                notificationsService.error("Media Index Rebuild", "Media Index Rebuild Failed");
+            });
+        }).always(function () {
             $scope.getIndicesInfo();
         });
     };
@@ -105,22 +115,20 @@
     };
 
     $scope.addIndex = function addIndex() {
-        $scope.busy = true;
         notificationsService.success('Creating Index', 'Index addition has started');
         umbElasticsearchResource.createIndex().then(function () {
-            $scope.busy = false;
             notificationsService.success("Index Create", "Index was added");
-            $scope.getIndicesInfo();
         }, function () {
-            $scope.busy = false;
             notificationsService.error("Index Create", "Index create Failed");
+        }).always(function() {
             $scope.getIndicesInfo();
         });
     };
 
-    $scope.busy = false;
-    $scope.available = false;
     function init() {
+        $scope.busy = false;
+        $scope.available = false;
+
         umbElasticsearchResource.getPluginVersionInfo().then(function (version) {
             $scope.pluginVersionInfo = version;
         });
@@ -172,4 +180,4 @@ angular
             }
         };
     })
-    .controller("umbElasticsearchController", ["$log", "$scope", "$timeout", "notificationsService", "umbElasticsearchResource", "assetsService", umbElasticsearchController]);
+    .controller("umbElasticsearchController", ["$log", "$scope", "$timeout", "notificationsService", "umbElasticsearchResource", "$q", umbElasticsearchController]);
