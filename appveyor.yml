@@ -1,5 +1,8 @@
 version: '{build}'
 os: Visual Studio 2015
+skip_branch_with_pr: true
+nuget:
+  disable_publish_on_pr: true
 init:
 - cmd: git config --global core.autocrlf true
 cache: 
@@ -10,3 +13,9 @@ build_script:
 test: off
 artifacts:
 - path: artifacts\*.nupkg
+deploy:
+- provider: NuGet
+  server: https://www.myget.org/F/umb/api/v2/package
+  api_key:
+    secure: uBbnpdXGOXoRoYN/p49RmU2xP+1KOAmw5tMMGL2Ui/W1MvkUwC++4oLw8kJgNYDn
+  skip_symbols: true
