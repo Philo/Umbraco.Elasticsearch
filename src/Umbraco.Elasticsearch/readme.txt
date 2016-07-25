@@ -20,14 +20,6 @@ If you dont already have one, you will need to setup a SearchApplicationEventHan
 
     public class UmbracoElasticsearchStartup : SearchApplicationEventHandler
     {
-        protected override IElasticClient ConfigureElasticClient(FromConfigSearchSettings searchSettings)
-        {
-            var indexResolver = new DefaultIndexNameResolver();
-            var indexName = indexResolver.Resolve(searchSettings, searchSettings.IndexName);
-            var connection = new ConnectionSettings(new Uri(searchSettings.Host), indexName);
-            return new ElasticClient(connection);
-        }
-
         protected override IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client)
         {
             return new UmbracoElasticsearchIndexCreationStrategy(client);
