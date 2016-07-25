@@ -24,10 +24,9 @@ namespace Umbraco.Elasticsearch.Samplev73.Features.Search
             SearchifyMvcConfig.Configure(HttpContext.Current.ApplicationInstance);
         }
 
-        protected override IElasticClient ConfigureElasticClient(FromConfigSearchSettings searchSettings)
+        // Override to customise client setup
+        protected override IElasticClient ConfigureElasticClient(FromConfigSearchSettings searchSettings, string indexName)
         {
-            var indexResolver = new DefaultIndexNameResolver();
-            var indexName = indexResolver.Resolve(searchSettings, searchSettings.IndexName);
             var connection = new ConnectionSettings(new Uri(searchSettings.Host), indexName);
             connection.EnableTrace();
             connection.ExposeRawResponse();

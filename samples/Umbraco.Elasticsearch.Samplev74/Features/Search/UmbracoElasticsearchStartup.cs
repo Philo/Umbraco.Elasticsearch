@@ -7,7 +7,6 @@ using Nest.Indexify.Contributors.Analysis.English;
 using Nest.Indexify.Contributors.IndexSettings;
 using Umbraco.Core;
 using Umbraco.Elasticsearch.Core;
-using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.EventHandlers;
 using Umbraco.Elasticsearch.Core.Media;
@@ -23,15 +22,7 @@ namespace Umbraco.Elasticsearch.Samplev74.Features.Search
         {
             SearchifyMvcConfig.Configure(HttpContext.Current.ApplicationInstance);
         }
-
-        protected override IElasticClient ConfigureElasticClient(FromConfigSearchSettings searchSettings)
-        {
-            var indexResolver = new DefaultIndexNameResolver();
-            var indexName = indexResolver.Resolve(searchSettings, searchSettings.IndexName);
-            var connection = new ConnectionSettings(new Uri(searchSettings.Host), indexName);
-            return new ElasticClient(connection);
-        }
-
+        
         protected override IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client)
         {
             return new UmbracoElasticsearchIndexCreationStrategy(client);

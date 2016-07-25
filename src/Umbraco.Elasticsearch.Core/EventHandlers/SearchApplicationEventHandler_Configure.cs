@@ -25,7 +25,18 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             }
         }
 
-        protected abstract IElasticClient ConfigureElasticClient(TSearchSettings searchSettings);
+        protected virtual IElasticClient ConfigureElasticClient(TSearchSettings searchSettings)
+        {
+            var indexResolver = new DefaultIndexNameResolver();
+            var indexName = indexResolver.Resolve(searchSettings, searchSettings.IndexName);
+            return ConfigureElasticClient(searchSettings, indexName);
+        }
+
+        protected virtual IElasticClient ConfigureElasticClient(TSearchSettings searchSettings, string indexName)
+        {
+            var connection = new ConnectionSettings(new Uri(searchSettings.Host), indexName);
+            return new ElasticClient(connection);
+        }
 
         protected abstract IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client);
     }
