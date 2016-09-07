@@ -1,0 +1,111 @@
+﻿<div class="umb-pane" ng-controller="umbElasticsearchController">
+    <div class="tab-content" data-ng-hide="available">
+        <p style="font-style: italic; color: red">The Elasticsearch integration is not active</p>
+
+        <p>Please see the integration instructions for further information</p>
+        <hr />
+    </div>
+    <div data-ng-show="available">
+        <div class="tab-content" data-ng-show="indexInfo">
+            <fieldset>
+                <legend><i class="icon icon-umb-settings"></i> Index Settings [{{ indexName }}]</legend>
+                <button class="btn btn-info btn-icon" data-ng-click="getIndicesInfo()"><span class="icon icon-backspace"></span> Back</button>
+                <pre style="background-color: ivory; padding: 5px; overflow: scroll; height: 500px; border: 1px black solid">{{ indexInfo | prettyJSON }}</pre>
+            </fieldset>
+        </div>
+        <div class="tab-content" data-ng-hide="indexInfo">
+            <fieldset data-ng-hide="indexInfo">
+                <legend><i class="icon icon-search"></i> Index information</legend>
+                <div class="umb-sub-header">
+                    <button class="btn btn-info btn-icon icon-refresh" data-ng-click="refreshIndexList()" title="refresh indices list"></button>
+                    <button data-ng-disabled="isBusy()" class="btn btn-warning btn-icon icon-add" data-ng-click="addIndex()" title="add index"></button>
+                </div>
+
+                <div class="umb-tab-pane-inner">
+                    <div class="umb-listview">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <td>&nbsp;</td>
+                                    <td>Name</td>
+                                    <td>Documents</td>
+                                    <td>Queries</td>
+                                    <td>Actions</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr data-ng-hide="info">
+                                    <td colspan="5" style="text-align: center; background-color: khaki">
+                                        <span style="font-style: italic; text-align: center">Unable to find indices matching known index pattern, use the <strong>add index</strong> option</span>
+                                    </td>
+                                </tr>
+                                <tr data-ng-show="info" ng-repeat="item in info track by item.Name" data-ng-style="setIndexStatusRowStyle(item)">
+                                    <td><abbr style="font-size: large" title="{{ item.Status }}" data-ng-class="setIndexStatusStyle(item)"></abbr></td>
+                                    <td data-ng-bind="item.Name"></td>
+                                    <td data-ng-bind="item.DocCount"></td>
+                                    <td data-ng-bind="item.Queries"></td>
+                                    <td>
+                                        <div>
+                                            <span>
+                                                <button title="view index mapping information" data-ng-click="viewIndexInfo(item.Name)" class="pull-right btn btn-icon btn-info btn-small icon-info"></button>
+                                            </span>
+                                            <span data-ng-if="item.Status != 'Active'" data-ng-disabled="isBusy()">
+                                                <span class="btn-group">
+                                                    <button title="Activate this index, once complete this index will be the default index queried" data-ng-disabled="isBusy()" data-ng-click="activateIndex(item.Name)" data-confirm-click="Are you sure you want to activate this index?" class="btn btn-small btn-info icon icon-check"></button>
+                                                    <button title="This will delete the index, this action can not be undone" data-ng-disabled="isBusy()" data-ng-click="deleteIndex(item.Name)" data-confirm-click="You are about to delete [{{item.Name}}], are you sure?" class="btn btn-small btn-danger icon icon-delete"></button>
+                                                </span>
+                                                <span class="btn-group">
+                                                    <button title="populates the index with all eligible content nodes" data-ng-disabled="isBusy()" data-ng-click="rebuildContentIndex(item.Name)" class="btn btn-small btn-primary icon icon-umb-content"></button>
+                                                    <button title="populates the index with all eligible media nodes" data-ng-disabled="isBusy()" data-ng-click="rebuildMediaIndex(item.Name)" class="btn btn-small btn-primary icon icon-umb-media"></button>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr data-ng-show="isBusy()">
+                                    <th colspan="5">
+                                        <span style="font-style: italic" class="color-orange">
+                                            {{ busyState.Message }}
+                                        </span>
+                                    </th>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend><i class="icon icon-umb-settings"></i> Active Settings</legend>
+                <dl>
+                    <dt>Host Version</dt>
+                    <dd data-ng-bind="versionNumber"></dd>
+                    <dt>Host</dt>
+                    <dd data-ng-bind="settings.Host"></dd>
+                    <dt>Index</dt>
+                    <dd data-ng-bind="settings.IndexName"></dd>
+                    <dt>Environment Prefix</dt>
+                    <dd data-ng-bind="settings.IndexEnvironmentPrefix"></dd>
+                </dl>
+            </fieldset>
+            <fieldset>
+                <legend><i class="icon icon-umb-content"></i> Active Content Services</legend>
+                <span data-ng-hide="contentServices" style="font-style: italic">No media indexing services registered</span>
+                <ul data-ng-show="contentServices">
+                    <li data-ng-repeat="service in contentServices">
+                        <strong>{{service.DocumentTypeName}}</strong> via <strong>{{service.Name}}</strong> <span data-ng-hide="service.Count < 0">(Docs: {{service.Count}})</span>
+                    </li>
+                </ul>
+            </fieldset>
+            <fieldset>
+                <legend><i class="icon icon-umb-media"></i> Active Media Services</legend>
+                <span data-ng-hide="mediaServices" style="font-style: italic">No media indexing services registered</span>
+                <ul data-ng-show="mediaServices">
+                    <li data-ng-repeat="service in mediaServices">
+                        <strong>{{service.DocumentTypeName}}</strong> via <strong>{{service.Name}}</strong> <span data-ng-hide="service.Count < 0">(Docs: {{service.Count}})</span>
+                    </li>
+                </ul>
+            </fieldset>
+        </div>
+    </div>
+    <span class="pull-right"><small>{{pluginVersionInfo.PluginVersion}} <i>({{pluginVersionInfo.UmbracoVersion}})</i></small></span>
+</div>

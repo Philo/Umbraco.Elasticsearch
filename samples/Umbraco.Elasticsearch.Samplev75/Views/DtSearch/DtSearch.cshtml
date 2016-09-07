@@ -1,0 +1,14 @@
+﻿@inherits UmbracoViewPage<Umbraco.Elasticsearch.Samplev75.Features.Search.Models.SearchResultModel<Umbraco.Elasticsearch.Samplev75.Features.Search.Queries.Article.ArticleSearchResult, Umbraco.Elasticsearch.Samplev75.Features.Search.Queries.Article.ArticleSearchParameters, Umbraco.Elasticsearch.Samplev75.Features.Search.Queries.Article.ArticleDocument>>
+
+<div>
+    <h2>Search Results</h2>
+    <ul>
+        @foreach (var item in Model.Results.Documents)
+        {
+            <li>
+                <h4><a href="@item.Url">@item.Title</a></h4>
+                <span>@item.Summary</span>
+            </li>
+        }
+    </ul>
+</div>

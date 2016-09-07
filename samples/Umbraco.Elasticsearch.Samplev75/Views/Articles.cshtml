@@ -1,0 +1,41 @@
+﻿@inherits UmbracoTemplatePage
+
+@functions {
+
+    private void CreateContent(Attempt<int>
+        count)
+    {
+        if (count.Success && count.Result > 0)
+        {
+            var prefix = DateTime.UtcNow.ToString("yyyy-MM-dd:HH:mm:ss");
+            var total = count.Result;
+            var svc = UmbracoContext.Application.Services;
+
+            var parent = svc.ContentService.GetById(Model.Content.Id);
+            for (var idx = 0; idx <= total; idx++)
+            {
+                var content = svc.ContentService.CreateContentWithIdentity(string.Format("Article {0} {1}", prefix, idx), parent, "dtArticle");
+                svc.ContentService.SaveAndPublishWithStatus(content, 0, false);
+            }
+        }
+    }
+
+}
+
+@{
+    if (Request.QueryString.AllKeys.Contains("c"))
+    {
+        CreateContent(Request.QueryString["c"].TryConvertTo<int>());
+    }
+    var articles = Model.Content.Children(c => c.IsDocumentType("dtArticle")).ToList();
+}
+
+<fieldset>
+    <legend>Articles (Total: @articles.Count)</legend>
+</fieldset>
+<ul>
+    @foreach (var article in articles)
+    {
+        <li>@article.Name</li>
+    }
+</ul>
