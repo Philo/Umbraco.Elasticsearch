@@ -24,7 +24,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
 
         public UmbElasticsearchIndexingController() : this(new IndexManager())
         {
-            _indexName = UmbracoSearchFactory.Client.Infer.DefaultIndex;
+            _indexName = UmbracoSearchFactory.ActiveIndexName;
         }
 
         [HttpGet]

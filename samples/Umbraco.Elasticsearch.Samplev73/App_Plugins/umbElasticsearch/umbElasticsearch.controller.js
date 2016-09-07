@@ -5,7 +5,7 @@
         $timeout.cancel($poller);
         $poller = $timeout(function poll() {
             $scope.getIndicesInfo();
-            if ($scope.busy) {
+            if ($scope.busyState.Busy) {
                 $poller = $timeout(poll, interval);
             }
         }, interval);
@@ -13,18 +13,24 @@
 
     function withBusyCheck(pollingInterval) {
         var deferred = $q.defer();
-        umbElasticsearchResource.isBusy().then(function (busy) {
-            $scope.busy = busy;
-            if ($scope.busy) {
+        umbElasticsearchResource.isBusy().then(function (busyState) {
+            $scope.busyState = busyState;
+            if ($scope.busyState.Busy) {
                 notificationsService.warning("Busy Operation Notification", "Another index operation is currently underway, you can not perform another operation until this is complete");
                 pollBusyState(pollingInterval || 30000);
-                deferred.reject(busy);
+                deferred.reject(busyState);
             } else {
-                $scope.busy = !busy;
-                deferred.resolve(busy);
+                deferred.resolve(busyState);
+                $timeout(function() {
+                    $scope.getIndicesInfo();
+                }, 1000);
             }
         });
         return deferred.promise;
+    }
+
+    $scope.isBusy = function() {
+        return $scope.busyState.Busy;
     }
 
     $scope.getContentServicesList = function () {
@@ -62,9 +68,9 @@
         $scope.indexName = null;
         return umbElasticsearchResource.getIndicesInfo().then(function (data) {
             $scope.info = data;
-            return umbElasticsearchResource.isBusy().then(function (busy) {
-                $scope.busy = busy;
-                if ($scope.busy) {
+            return umbElasticsearchResource.isBusy().then(function (busyState) {
+                $scope.busyState = busyState;
+                if ($scope.busyState.Busy) {
                     pollBusyState(10000);
                 }
             });
@@ -86,7 +92,6 @@
 
     $scope.rebuildContentIndex = function (indexName) {
         withBusyCheck(5000).then(function () {
-            notificationsService.success('Rebuilding Content Index', 'Content Index rebuild has started');
             return umbElasticsearchResource.rebuildContentIndex(indexName).then(function () {
                 notificationsService.success("Content Index Rebuild", "Content Index rebuild completed");
             }, function () {
@@ -99,7 +104,6 @@
 
     $scope.rebuildMediaIndex = function (indexName) {
         withBusyCheck(5000).then(function () {
-            notificationsService.success('Rebuilding Media Index', 'Media Index rebuild has started');
             return umbElasticsearchResource.rebuildMediaIndex(indexName).then(function () {
                 notificationsService.success("Media Index Rebuild", "Media Index rebuild completed");
             }, function () {
@@ -125,8 +129,30 @@
         });
     };
 
+    $scope.setIndexStatusRowStyle = function (item) {
+        switch(item.Status) {
+            case "Active":
+                return { "font-weight": "bold" };
+            case "Busy":
+                return { "font-style": "italic" };
+            default:
+                return { };
+        }
+    }
+
+    $scope.setIndexStatusStyle = function (item) {
+        switch (item.Status) {
+            case "Active":
+                return "icon-checkbox color-green";
+            case "Busy":
+                return "icon-hourglass color-orange";
+            default:
+                return "icon-checkbox-empty color-black";
+        }
+    }
+
     function init() {
-        $scope.busy = false;
+        $scope.busyState = { Busy: false, Message: "", Elapsed: "" };
         $scope.available = false;
 
         umbElasticsearchResource.getPluginVersionInfo().then(function (version) {
@@ -154,7 +180,7 @@ angular
     .module("umbraco")
     .filter('prettyJSON', function () {
         function prettyPrintJson(json) {
-            return JSON ? JSON.stringify(json, null, '  ') : 'your browser doesnt support JSON so cant pretty print';
+            return JSON ? JSON.stringify(json, null, "  ") : json;
         }
         return prettyPrintJson;
     })

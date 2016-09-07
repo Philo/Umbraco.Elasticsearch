@@ -25,7 +25,7 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
                     }
                 }
                 LogHelper.Info<ContentIndexer>(
-                    $"Finished building index [{indexName}] : elapsed {BusyStateManager.Elapsed.ToString("g")}");
+                    $"Finished building index [{indexName}] : elapsed {BusyStateManager.Elapsed:g}");
             }
         }
     }

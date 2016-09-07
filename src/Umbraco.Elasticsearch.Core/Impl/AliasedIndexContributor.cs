@@ -33,7 +33,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         public string OnPreCreate(IElasticClient client, string indexName)
         {
-            _indexAliasedTo = _indexAliasedTo ?? $"{indexName}-{DateTime.UtcNow.ToString("yyyyMMddHHmmss")}";
+            _indexAliasedTo = _indexAliasedTo ?? $"{indexName}-{DateTime.UtcNow:yyyyMMddHHmmss}";
             return _indexAliasedTo;
         }
 
@@ -41,7 +41,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
         {
             if (_activate)
             {
-                var indexName = client.Infer.DefaultIndex;
+                var indexName = UmbracoSearchFactory.ActiveIndexName;
                 client.Alias(a => a
                     .Remove(r => r.Alias(indexName).Index($"{indexName}*"))
                     .Add(aa => aa.Alias(indexName).Index(_indexAliasedTo))

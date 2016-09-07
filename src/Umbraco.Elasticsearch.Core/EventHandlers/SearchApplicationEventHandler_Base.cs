@@ -11,6 +11,7 @@ using Umbraco.Core.Publishing;
 using Umbraco.Core.Services;
 using Umbraco.Core.Sync;
 using Umbraco.Elasticsearch.Core.Config;
+using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Web;
 using Umbraco.Web.Cache;
 using Umbraco.Web.UI.JavaScript;
@@ -30,15 +31,6 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         protected SearchApplicationEventHandler(TSearchSettings searchSettings)
         {
             SearchSettings<TSearchSettings>.Set(searchSettings);
-
-            ContentService.Published += ContentService_Published;
-            ContentService.UnPublished += ContentServiceOnUnPublished;
-            ContentService.Trashed += ContentServiceOnTrashed;
-
-            CacheRefresherBase<PageCacheRefresher>.CacheUpdated += CacheRefresherBaseOnCacheUpdated;
-
-            MediaService.Saved += MediaServiceOnSaved;
-            MediaService.Deleted += MediaServiceOnDeleted;
         }
 
         protected sealed override void ApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
@@ -57,6 +49,20 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
 
         protected sealed override void ApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
+            ContentService.Published += ContentService_Published;
+            ContentService.UnPublished += ContentServiceOnUnPublished;
+            ContentService.Trashed += ContentServiceOnTrashed;
+            ContentService.Moved += ContentServiceOnMoved;
+            ContentService.Copied += ContentServiceOnCopied;
+            ContentService.RolledBack += ContentServiceOnRolledBack;
+
+            //CacheRefresherBase<MediaCacheRefresher>.CacheUpdated += CacheRefresherBaseOnCacheUpdated;
+            //CacheRefresherBase<PageCacheRefresher>.CacheUpdated += CacheRefresherBaseOnCacheUpdated;
+
+            MediaService.Moved += MediaServiceOnMoved;
+            MediaService.Saved += MediaServiceOnSaved;
+            MediaService.Deleted += MediaServiceOnDeleted;
+
             foreach (var service in RegisterContentIndexingServices())
             {
                 UmbracoSearchFactory.RegisterContentIndexService(service, service.ShouldIndex);
@@ -66,6 +72,21 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             {
                 UmbracoSearchFactory.RegisterMediaIndexService(service, service.ShouldIndex);
             }
+
+            // check for activate index
+            var m = new IndexManager();
+            var activeIndex = m.IndicesInfo().Result.FirstOrDefault(x => x.Status == IndexStatusOption.Active);
+            LogHelper.Info<SearchApplicationEventHandler>($"Active Index: {activeIndex.Name}");
+        }
+
+        private void ContentServiceOnRolledBack(IContentService sender, RollbackEventArgs<IContent> rollbackEventArgs)
+        {
+            IndexContentCore(rollbackEventArgs.Entity.AsEnumerableOfOne(), rollbackEventArgs.Messages);
+        }
+
+        private void ContentServiceOnCopied(IContentService sender, CopyEventArgs<IContent> copyEventArgs)
+        {
+            IndexContentCore(copyEventArgs.Copy.AsEnumerableOfOne(), copyEventArgs.Messages);
         }
 
         #region Event Handlers
@@ -84,6 +105,16 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             IndexContentCore(e.PublishedEntities, e.Messages);
         }
 
+        private void ContentServiceOnMoved(IContentService sender, MoveEventArgs<IContent> moveEventArgs)
+        {
+            IndexContentCore(moveEventArgs.MoveInfoCollection.Select(x => x.Entity), moveEventArgs.Messages);
+        }
+
+        private void MediaServiceOnMoved(IMediaService sender, MoveEventArgs<IMedia> moveEventArgs)
+        {
+            IndexMediaCore(moveEventArgs.MoveInfoCollection.Select(x => x.Entity), moveEventArgs.Messages);
+        }
+
         private void MediaServiceOnDeleted(IMediaService sender, DeleteEventArgs<IMedia> deleteEventArgs)
         {
             RemoveMediaCore(deleteEventArgs.DeletedEntities, deleteEventArgs.Messages);
@@ -92,31 +123,6 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         private void MediaServiceOnSaved(IMediaService sender, SaveEventArgs<IMedia> saveEventArgs)
         {
             IndexMediaCore(saveEventArgs.SavedEntities, saveEventArgs.Messages);
-        }
-
-        private void CacheRefresherBaseOnCacheUpdated(PageCacheRefresher sender, CacheRefresherEventArgs cacheRefresherEventArgs)
-        {
-            var helper = new UmbracoHelper(UmbracoContext.Current);
-            var contentService = helper.UmbracoContext.Application.Services.ContentService;
-
-            IContent content = null;
-            switch (cacheRefresherEventArgs.MessageType)
-            {
-                case MessageType.RefreshById:
-                    content = contentService.GetById((int)cacheRefresherEventArgs.MessageObject);
-                    break;
-                case MessageType.RefreshByInstance:
-                    content = cacheRefresherEventArgs.MessageObject as IContent;
-                    break;
-            }
-
-            if (content != null)
-            {
-                if (content.CreateDate == content.UpdateDate && !content.HasIdentity)
-                {
-                    IndexContentCore(new[] { content }, null);
-                }
-            }
         }
 
         private static void InstallServerVars()

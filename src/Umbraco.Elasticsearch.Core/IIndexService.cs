@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using Newtonsoft.Json.Linq;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
 

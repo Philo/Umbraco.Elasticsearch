@@ -52,9 +52,7 @@ angular.module("umbraco.resources")
                 });
             },
             isBusy: function () {
-                return $http.get(apiUrl("IsBusy")).then(function (response) {
-                    return response.data.busy !== null && response.data.busy === true;
-                });
+                return umbRequestHelper.resourcePromise($http.get(apiUrl("IsBusy")));
             }
         };
     });

@@ -28,15 +28,22 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
     {
         protected MediaIndexService(IElasticClient client, UmbracoContext umbracoContext, TSearchSettings searchSettings) : base(client, umbracoContext, searchSettings) { }
 
-        protected override sealed IEnumerable<IMedia> RetrieveIndexItems(ServiceContext serviceContext)
+        protected sealed override IEnumerable<IMedia> RetrieveIndexItems(ServiceContext serviceContext)
         {
             var mediaType = serviceContext.ContentTypeService.GetMediaType(DocumentTypeName);
             return serviceContext.MediaService.GetMediaOfMediaType(mediaType.Id).Where(x => !x.Trashed);
         }
 
-        public override sealed bool ShouldIndex(IMedia entity)
+        public sealed override bool ShouldIndex(IMedia entity)
         {
             return entity.ContentType.Alias.Equals(IndexTypeName, StringComparison.CurrentCultureIgnoreCase);
+        }
+
+        protected override string UrlFor(IMedia contentInstance)
+        {
+            var helper = new UmbracoHelper(UmbracoContext.Current);
+            var media = helper.TypedMedia(contentInstance.Id);
+            return media.Url();
         }
     }
 }

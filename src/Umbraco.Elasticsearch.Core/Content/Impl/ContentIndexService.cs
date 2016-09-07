@@ -31,13 +31,13 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
     {
         protected ContentIndexService(IElasticClient client, UmbracoContext umbracoContext, TSearchSettings searchSettings) : base(client, umbracoContext, searchSettings) { }
 
-        protected override sealed IEnumerable<IContent> RetrieveIndexItems(ServiceContext serviceContext)
+        protected sealed override IEnumerable<IContent> RetrieveIndexItems(ServiceContext serviceContext)
         {
             var contentType = serviceContext.ContentTypeService.GetContentType(DocumentTypeName);
             return serviceContext.ContentService.GetContentOfContentType(contentType.Id).Where(x => x.Published);
         }
 
-        public override sealed bool ShouldIndex(IContent entity)
+        public sealed override bool ShouldIndex(IContent entity)
         {
             return entity.ContentType.Alias.Equals(IndexTypeName, StringComparison.CurrentCultureIgnoreCase);
         }

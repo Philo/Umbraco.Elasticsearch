@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Nest;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
@@ -23,9 +25,6 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         protected string IndexTypeName => _indexTypeName.Value;
 
-        [Obsolete("Bad usage, the UmbracoHelper should be created as needed and not be a long lived instance", true)]
-        protected UmbracoHelper Helper { get; }
-
         protected TSearchSettings SearchSettings { get; }
 
         protected IndexService(IElasticClient client, UmbracoContext umbracoContext, TSearchSettings searchSettings)
@@ -46,12 +45,29 @@ namespace Umbraco.Elasticsearch.Core.Impl
             return typeof (TUmbracoDocument).GetCustomAttribute<ElasticTypeAttribute>()?.Name;
         }
 
-        public void Index(TUmbracoEntity entity, string indexName = null)
+        public void Index(TUmbracoEntity entity, string indexName)
         {
             if (!IsExcludedFromIndex(entity))
             {
-                var doc = CreateCore(entity);
-                IndexCore(_client, doc, indexName);
+                try
+                {
+                    var doc = CreateCore(entity);
+                    if (doc != null)
+                    {
+                        IndexCore(_client, doc, indexName);
+                        entity.SetIndexingStatus(IndexingStatusOption.Success, $"Indexed '{entity.Name}' into '{indexName}'");
+                    }
+                    else
+                    {
+                        LogHelper.Warn<IndexService<TUmbracoDocument, TUmbracoEntity, TSearchSettings>>($"Unable to create document for indexing from '{entity.Name}' with Id: {entity.Id}");
+                        entity.SetIndexingStatus(IndexingStatusOption.Error, $"Unable to create document for indexing from '{entity.Name}' with Id: {entity.Id}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    LogHelper.Error<IndexService<TUmbracoDocument, TUmbracoEntity, TSearchSettings>>($"Unable to create document for indexing from '{entity.Name}' with Id: {entity.Id} due to exception", ex);
+                    entity.SetIndexingStatus(IndexingStatusOption.Error, $"Unable to create document for indexing from '{entity.Name}' with Id: {entity.Id}");
+                }
             }
             else
             {
@@ -94,13 +110,13 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         protected abstract IEnumerable<TUmbracoEntity> RetrieveIndexItems(ServiceContext serviceContext);
 
-        protected virtual void RemoveFromIndex(IList<string> ids, string indexName)
+        protected virtual IBulkResponse RemoveFromIndex(IList<string> ids, string indexName)
         {
             if (ids.Any())
             {
-                UmbracoSearchFactory.Client.Bulk(
-                    b => b.DeleteMany<TUmbracoDocument>(ids, (desc, id) => desc.Index(indexName)).Refresh());
+                return _client.Bulk(b => b.DeleteMany<TUmbracoDocument>(ids, (desc, id) => desc.Index(indexName)).Refresh());
             }
+            return null;
         }
 
         protected virtual void AddOrUpdateIndex(IList<TUmbracoDocument> docs, string indexName, int pageSize = 500)
@@ -148,6 +164,8 @@ namespace Umbraco.Elasticsearch.Core.Impl
         {
             try
             {
+                if (!HasUrl(contentInstance)) return null;
+
                 var doc = new TUmbracoDocument
                 {
                     Id = IdFor(contentInstance),
@@ -157,17 +175,28 @@ namespace Umbraco.Elasticsearch.Core.Impl
                 Create(doc, contentInstance);
 
                 return doc;
+
             }
             catch (Exception ex)
             {
-                LogHelper.Error(GetType(), $"Unable to create {DocumentTypeName} due to an exception", ex);
+                LogHelper.Error(GetType(), $"Unable to create {contentInstance.Name} due to an exception", ex);
+                contentInstance.SetIndexingStatus(IndexingStatusOption.Error, $"Unable to create {contentInstance.Name} due to an exception");
                 return null;
             }
         }
 
         public void Remove(TUmbracoEntity entity, string indexName)
         {
-            RemoveCore(_client, entity, indexName);
+            try
+            {
+                RemoveCore(_client, entity, indexName);
+                entity.SetIndexingStatus(IndexingStatusOption.Success, $"Removed '{entity.Name}' from '{indexName}'");
+            }
+            catch (Exception ex)
+            {
+                LogHelper.Error(GetType(), $"Unable to remove '{entity.Name}' due to an exception", ex);
+                entity.SetIndexingStatus(IndexingStatusOption.Error, $"Unable to remove '{entity.Name}' due to an exception");
+            }
         }
 
         protected virtual void RemoveCore(IElasticClient client, TUmbracoEntity entity,
@@ -191,6 +220,12 @@ namespace Umbraco.Elasticsearch.Core.Impl
         protected virtual string UrlFor(TUmbracoEntity contentInstance)
         {
             return UmbracoContext.Current.UrlProvider.GetUrl(contentInstance.Id);
+        }
+
+        private bool HasUrl(TUmbracoEntity contentInstance)
+        {
+            var url = UrlFor(contentInstance);
+            return !string.IsNullOrWhiteSpace(url) && !url.Equals("#", StringComparison.CurrentCultureIgnoreCase);
         }
 
         protected virtual string IdFor(TUmbracoEntity contentInstance)

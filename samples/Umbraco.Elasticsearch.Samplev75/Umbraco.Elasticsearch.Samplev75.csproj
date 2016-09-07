@@ -424,6 +424,7 @@
     <Content Include="Views\Shared\_SearchifyMvcParametersPartial.cshtml" />
     <Content Include="Views\Articles.cshtml" />
     <Content Include="Views\Home.cshtml" />
+    <Content Include="Views\DtSearch\DtSearch.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

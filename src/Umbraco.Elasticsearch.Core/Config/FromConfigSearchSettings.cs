@@ -9,7 +9,7 @@ namespace Umbraco.Elasticsearch.Core.Config
 {
     public class FromConfigSearchSettings : ISearchSettings
     {
-        private readonly static string Prefix = $"{UmbElasticsearchConstants.Configuration.Prefix}:";
+        private static readonly string Prefix = $"{UmbElasticsearchConstants.Configuration.Prefix}:";
 
         public string Host { get; } = nameof(Host).FromAppSettingsWithPrefix(Prefix, "http://localhost:9200");
 

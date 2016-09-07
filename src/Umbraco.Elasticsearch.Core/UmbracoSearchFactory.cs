@@ -19,8 +19,8 @@ namespace Umbraco.Elasticsearch.Core
     {
         private static IElasticClient _client;
 
-        private readonly static IDictionary<IContentIndexService, Func<IContent, bool>> ContentIndexServiceRegistry = new Dictionary<IContentIndexService, Func<IContent, bool>>();
-        private readonly static IDictionary<IMediaIndexService, Func<IMedia, bool>> MediaIndexServiceRegistry = new Dictionary<IMediaIndexService, Func<IMedia, bool>>();
+        private static readonly IDictionary<IContentIndexService, Func<IContent, bool>> ContentIndexServiceRegistry = new Dictionary<IContentIndexService, Func<IContent, bool>>();
+        private static readonly IDictionary<IMediaIndexService, Func<IMedia, bool>> MediaIndexServiceRegistry = new Dictionary<IMediaIndexService, Func<IMedia, bool>>();
 
         private static IElasticsearchIndexCreationStrategy _indexStrategy;
 
@@ -126,5 +126,8 @@ namespace Umbraco.Elasticsearch.Core
             var umbracoVersion = "umbracoConfigurationStatus".FromAppSettings("N/A");
             return new PluginVersionInfo(pluginVersion,umbracoVersion);
         }
+
+        public static string ActiveIndexName => _client.Infer.DefaultIndex;
+        public static bool HasActiveIndex { get; set; } = false;
     }
 }

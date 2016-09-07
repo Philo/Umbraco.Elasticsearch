@@ -66,15 +66,17 @@ namespace Umbraco.Elasticsearch.Core.Impl
         public async Task<IEnumerable<IndexStatusInfo>> IndicesInfo()
         {
             var response = await _client.IndicesStatsAsync();
-            var indexAliasName = _client.Infer.DefaultIndex;
-            return response.Indices.Where(x => x.Key.StartsWith($"{indexAliasName}-")).Select(x => new IndexStatusInfo
+            var indexAliasName = UmbracoSearchFactory.ActiveIndexName;
+            var indexInfo = response.Indices.Where(x => x.Key.StartsWith($"{indexAliasName}-")).Select(x => new IndexStatusInfo
             {
                 Name = x.Key,
                 DocCount = x.Value.Total.Documents.Count,
                 Queries = x.Value.Total.Search.QueryTotal,
                 SizeInBytes = x.Value.Total.Store.SizeInBytes,
                 Status = GetStatus(x.Key)
-            });
+            }).ToList();
+            UmbracoSearchFactory.HasActiveIndex = indexInfo.Any(x => x.Status == IndexStatusOption.Active);
+            return indexInfo;
         }
 
         public async Task<Version> GetElasticsearchVersion()
@@ -95,7 +97,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
         private IndexStatusOption GetStatus(string indexName)
         {
             if (BusyStateManager.IsBusy && BusyStateManager.IndexName.Equals(indexName, StringComparison.InvariantCultureIgnoreCase)) return IndexStatusOption.Busy;
-            return _client.AliasExists(x => x.Index(indexName).Name(_client.Infer.DefaultIndex)).Exists ? IndexStatusOption.Active : IndexStatusOption.None;
+            return _client.AliasExists(x => x.Index(indexName).Name(UmbracoSearchFactory.ActiveIndexName)).Exists ? IndexStatusOption.Active : IndexStatusOption.None;
         }
 
         public async Task ActivateIndexAsync(string indexName)
@@ -103,11 +105,12 @@ namespace Umbraco.Elasticsearch.Core.Impl
             using (BusyStateManager.Start($"Activating {indexName} triggered by '{UmbracoContext.Current.Security.CurrentUser.Name}'", indexName))
             {
                 var client = UmbracoSearchFactory.Client;
-                var indexAliasName = client.Infer.DefaultIndex;
+                var indexAliasName = UmbracoSearchFactory.ActiveIndexName;
                 await client.AliasAsync(a => a
                     .Remove(r => r.Alias(indexAliasName).Index($"{indexAliasName}*"))
                     .Add(aa => aa.Alias(indexAliasName).Index(indexName))
                     );
+                UmbracoSearchFactory.HasActiveIndex = true;
             }
         }
     }
