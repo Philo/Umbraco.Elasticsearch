@@ -63,7 +63,14 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             MediaService.Saved += MediaServiceOnSaved;
             MediaService.Deleted += MediaServiceOnDeleted;
 
-            CacheRefresherBase<PageCacheRefresher>.CacheUpdated += CacheRefresherBaseOnCacheUpdated;
+            if (!SearchSettings<TSearchSettings>.Current.GetAdditionalData(UmbElasticsearchConstants.Configuration.DisableContentCacheUpdatedEventHook, false))
+            {
+                CacheRefresherBase<PageCacheRefresher>.CacheUpdated += CacheRefresherBaseOnCacheUpdated;
+            }
+            else
+            {
+                LogHelper.Info<SearchApplicationEventHandler<TSearchSettings>>("Disabled content cache update event hook");
+            }
 
             foreach (var service in RegisterContentIndexingServices())
             {

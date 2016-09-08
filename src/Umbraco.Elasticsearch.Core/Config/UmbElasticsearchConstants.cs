@@ -7,6 +7,7 @@
             public const string Prefix = "umbElasticsearch";
             public const string IndexBatchSize = nameof(IndexBatchSize);
             public const string ExcludeFromIndexPropertyAlias = nameof(ExcludeFromIndexPropertyAlias);
+            public const string DisableContentCacheUpdatedEventHook = nameof(DisableContentCacheUpdatedEventHook);
         }
 
         public static class Properties
