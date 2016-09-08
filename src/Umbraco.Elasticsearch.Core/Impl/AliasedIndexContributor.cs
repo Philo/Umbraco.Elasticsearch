@@ -39,17 +39,20 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         public void OnSuccess(IElasticClient client, IIndicesOperationResponse response)
         {
-            if (_activate)
+            if (client != null && response.Acknowledged)
             {
-                var indexName = UmbracoSearchFactory.ActiveIndexName;
-                client.Alias(a => a
-                    .Remove(r => r.Alias(indexName).Index($"{indexName}*"))
-                    .Add(aa => aa.Alias(indexName).Index(_indexAliasedTo))
+                if (_activate)
+                {
+                    var indexName = UmbracoSearchFactory.ActiveIndexName;
+                    client.Alias(a => a
+                            .Remove(r => r.Alias(indexName).Index($"{indexName}*"))
+                            .Add(aa => aa.Alias(indexName).Index(_indexAliasedTo))
                     );
+                }
+                Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping(_indexAliasedTo));
+                Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping(_indexAliasedTo));
+                OnSuccessEventHandler?.Invoke(this, new AliasedIndexSuccessEventArgs(_indexAliasedTo, _activate));
             }
-            Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping(_indexAliasedTo));
-            Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping(_indexAliasedTo));
-            OnSuccessEventHandler?.Invoke(this, new AliasedIndexSuccessEventArgs(_indexAliasedTo, _activate));
         }
     }
 }

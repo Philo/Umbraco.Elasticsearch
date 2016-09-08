@@ -2,16 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Umbraco.Core.Cache;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
-using Umbraco.Core.Sync;
 using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.Utils;
-using Umbraco.Web;
-using Umbraco.Web.Cache;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
@@ -121,33 +117,6 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             {
                 messages?.Add(new EventMessage("Search", "No active index available for indexing", EventMessageType.Error));
                 LogHelper.Warn(GetType(), "No active index available for indexing");
-            }
-
-        }
-
-        [Obsolete("This shouldnt be needed anymore?", true)]
-        private void CacheRefresherBaseOnCacheUpdated(PageCacheRefresher sender, CacheRefresherEventArgs cacheRefresherEventArgs)
-        {
-            var helper = new UmbracoHelper(UmbracoContext.Current);
-            var contentService = helper.UmbracoContext.Application.Services.ContentService;
-
-            IContent content = null;
-            switch (cacheRefresherEventArgs.MessageType)
-            {
-                case MessageType.RefreshById:
-                    content = contentService.GetById((int)cacheRefresherEventArgs.MessageObject);
-                    break;
-                case MessageType.RefreshByInstance:
-                    content = cacheRefresherEventArgs.MessageObject as IContent;
-                    break;
-            }
-
-            if (content != null)
-            {
-                if (content.CreateDate == content.UpdateDate)
-                {
-                    IndexContentCore(new[] { content }, null);
-                }
             }
         }
     }

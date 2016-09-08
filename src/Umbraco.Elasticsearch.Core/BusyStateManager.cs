@@ -10,7 +10,7 @@ namespace Umbraco.Elasticsearch.Core
 
         public static string Message
         {
-            get { return $"{_message} (Elapsed: {Elapsed.TotalSeconds.ToString("##.000")} seconds)"; }
+            get { return $"{_message} (Elapsed: {Elapsed.TotalSeconds:##.000} seconds)"; }
             private set { _message = value; }
         }
 
@@ -51,7 +51,7 @@ namespace Umbraco.Elasticsearch.Core
 
         public void End()
         {
-            LogHelper.Info<BusyStateManager>($"Busy state ended after {Elapsed.ToString("g")}");
+            LogHelper.Info<BusyStateManager>($"Busy state ended after {Elapsed:g}");
             lock (Locker)
             {
                 Stopwatch.Stop();
@@ -59,9 +59,19 @@ namespace Umbraco.Elasticsearch.Core
             }
         }
 
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                End();
+            }
+        }
+
+
         public void Dispose()
         {
-            End();
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

@@ -35,8 +35,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
 
         protected sealed override void ApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
-            DashboardHelper.EnsureSection("umbElasticsearch", "Elasticsearch",
-                "/App_Plugins/umbElasticsearch/umbElasticsearch.html");
+            DashboardHelper.EnsureSection("umbElasticsearch", "Elasticsearch", "/App_Plugins/umbElasticsearch/umbElasticsearch.html");
 
             InstallServerVars();
         }
@@ -55,9 +54,6 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             ContentService.Moved += ContentServiceOnMoved;
             ContentService.Copied += ContentServiceOnCopied;
             ContentService.RolledBack += ContentServiceOnRolledBack;
-
-            //CacheRefresherBase<MediaCacheRefresher>.CacheUpdated += CacheRefresherBaseOnCacheUpdated;
-            //CacheRefresherBase<PageCacheRefresher>.CacheUpdated += CacheRefresherBaseOnCacheUpdated;
 
             MediaService.Moved += MediaServiceOnMoved;
             MediaService.Saved += MediaServiceOnSaved;

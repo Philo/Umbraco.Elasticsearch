@@ -1,6 +1,5 @@
 using System;
 using Umbraco.Core.Logging;
-using Umbraco.Web;
 
 namespace Umbraco.Elasticsearch.Core.Media.Impl
 {
@@ -8,6 +7,8 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
     {
         public void Build(string indexName)
         {
+            var indexExists = UmbracoSearchFactory.Client.IndexExists(i => i.Index(indexName))?.Exists ?? false;
+            if (!indexExists) throw new InvalidOperationException($"'{indexName}' not available, please ensure you have created an index with this name");
             using (BusyStateManager.Start($"Building media for {indexName}", indexName))
             {
                 LogHelper.Info<MediaIndexer>($"Started building index [{indexName}]");
@@ -25,7 +26,7 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
                     }
                 }
                 LogHelper.Info<MediaIndexer>(
-                    $"Finished building index [{indexName}] : elapsed {BusyStateManager.Elapsed.ToString("g")}");
+                    $"Finished building index [{indexName}] : elapsed {BusyStateManager.Elapsed:g}");
             }
         }
     }
