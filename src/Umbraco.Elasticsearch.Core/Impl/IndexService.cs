@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -143,7 +144,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
             foreach (var contentList in retrievedItems.Page(pageSize))
             {
                 var contentGroups = contentList.ToLookup(IsExcludedFromIndex, c => c);
-                RemoveFromIndex(contentGroups[true].Select(x => x.Id.ToString()).ToList(), indexName);
+                RemoveFromIndex(contentGroups[true].Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToList(), indexName);
                 AddOrUpdateIndex(contentGroups[false].Select(CreateCore).Where(x => x != null).ToList(), indexName, pageSize);
             }
             _client.Refresh(i => i.Index(indexName));
@@ -230,7 +231,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         protected virtual string IdFor(TUmbracoEntity contentInstance)
         {
-            return contentInstance.Id.ToString();
+            return contentInstance.Id.ToString(CultureInfo.InvariantCulture);
         }
     }
 }

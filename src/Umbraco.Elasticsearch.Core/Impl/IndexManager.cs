@@ -96,7 +96,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         private IndexStatusOption GetStatus(string indexName)
         {
-            if (BusyStateManager.IsBusy && BusyStateManager.IndexName.Equals(indexName, StringComparison.InvariantCultureIgnoreCase)) return IndexStatusOption.Busy;
+            if (BusyStateManager.IsBusy && BusyStateManager.IndexName.Equals(indexName, StringComparison.OrdinalIgnoreCase)) return IndexStatusOption.Busy;
             return _client.AliasExists(x => x.Index(indexName).Name(UmbracoSearchFactory.ActiveIndexName)).Exists ? IndexStatusOption.Active : IndexStatusOption.None;
         }
 
