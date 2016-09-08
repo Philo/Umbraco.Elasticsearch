@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Nest;
+using Polly;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
@@ -56,11 +58,6 @@ namespace Umbraco.Elasticsearch.Core.Impl
                     {
                         IndexCore(_client, doc, indexName);
                         entity.SetIndexingStatus(IndexingStatusOption.Success, $"Indexed '{entity.Name}' into '{indexName}'");
-                    }
-                    else
-                    {
-                        LogHelper.Warn<IndexService<TUmbracoDocument, TUmbracoEntity, TSearchSettings>>($"Unable to create document for indexing from '{entity.Name}' with Id: {entity.Id}");
-                        entity.SetIndexingStatus(IndexingStatusOption.Error, $"Unable to create document for indexing from '{entity.Name}' with Id: {entity.Id}");
                     }
                 }
                 catch (Exception ex)
@@ -164,7 +161,12 @@ namespace Umbraco.Elasticsearch.Core.Impl
         {
             try
             {
-                if (!HasUrl(contentInstance)) return null;
+                if (!HasUrl(contentInstance))
+                {
+                    LogHelper.Warn(GetType(), $"Unable to determine url for {contentInstance.Name}, returned url was: {UrlFor(contentInstance)}");
+                    contentInstance.SetIndexingStatus(IndexingStatusOption.Error, $"Unable to determine url for '{contentInstance.Name}', cant index without valid url");
+                    return null;
+                }
 
                 var doc = new TUmbracoDocument
                 {
@@ -216,7 +218,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
         }
 
         public abstract bool ShouldIndex(TUmbracoEntity entity);
-
+        
         protected virtual string UrlFor(TUmbracoEntity contentInstance)
         {
             return UmbracoContext.Current.UrlProvider.GetUrl(contentInstance.Id);
@@ -224,8 +226,18 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         private bool HasUrl(TUmbracoEntity contentInstance)
         {
-            var url = UrlFor(contentInstance);
-            return !string.IsNullOrWhiteSpace(url) && !url.Equals("#", StringComparison.CurrentCultureIgnoreCase);
+            var urlRetryPolicy = Policy.HandleResult(false).WaitAndRetry(5, i => TimeSpan.FromSeconds(i));
+            var result = urlRetryPolicy.ExecuteAndCapture(() =>
+            {
+                var url = UrlFor(contentInstance);
+                if (string.IsNullOrWhiteSpace(url) || url.Equals("#", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    LogHelper.Warn<IndexService<TUmbracoDocument, TUmbracoEntity, TSearchSettings>>($"Content url is invalid: {url}, waiting for cache update to try again");
+                    return false;
+                }
+                return true;
+            });
+            return result.Result;
         }
 
         protected virtual string IdFor(TUmbracoEntity contentInstance)

@@ -1,19 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Nest;
+using System.Runtime.Serialization;
 using Umbraco.Core;
-using Umbraco.Core.Cache;
 using Umbraco.Core.Events;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Core.Publishing;
 using Umbraco.Core.Services;
-using Umbraco.Core.Sync;
 using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Impl;
-using Umbraco.Web;
-using Umbraco.Web.Cache;
 using Umbraco.Web.UI.JavaScript;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
@@ -33,14 +29,6 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             SearchSettings<TSearchSettings>.Set(searchSettings);
         }
 
-        protected sealed override void ApplicationStarting(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
-        {
-            DashboardHelper.EnsureSection("umbElasticsearch", "Elasticsearch",
-                "/App_Plugins/umbElasticsearch/umbElasticsearch.html");
-
-            InstallServerVars();
-        }
-
         protected sealed override void ApplicationInitialized(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
             LogHelper.Info<SearchApplicationEventHandler<TSearchSettings>>(() => "Initialising configuration for Elasticsearch integration");
@@ -49,6 +37,9 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
 
         protected sealed override void ApplicationStarted(UmbracoApplicationBase umbracoApplication, ApplicationContext applicationContext)
         {
+            DashboardHelper.EnsureSection("umbElasticsearch", "Elasticsearch", "/App_Plugins/umbElasticsearch/umbElasticsearch.html");
+            InstallServerVars();
+
             ContentService.Published += ContentService_Published;
             ContentService.UnPublished += ContentServiceOnUnPublished;
             ContentService.Trashed += ContentServiceOnTrashed;
