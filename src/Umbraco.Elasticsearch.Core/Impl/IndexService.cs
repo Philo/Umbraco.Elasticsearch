@@ -165,8 +165,6 @@ namespace Umbraco.Elasticsearch.Core.Impl
         {
             try
             {
-                if (!HasUrl(contentInstance)) return null;
-
                 var doc = new TUmbracoDocument
                 {
                     Id = IdFor(contentInstance),
@@ -221,12 +219,6 @@ namespace Umbraco.Elasticsearch.Core.Impl
         protected virtual string UrlFor(TUmbracoEntity contentInstance)
         {
             return UmbracoContext.Current.UrlProvider.GetUrl(contentInstance.Id);
-        }
-
-        private bool HasUrl(TUmbracoEntity contentInstance)
-        {
-            var url = UrlFor(contentInstance);
-            return !string.IsNullOrWhiteSpace(url) && !url.Equals("#", StringComparison.CurrentCultureIgnoreCase);
         }
 
         protected virtual string IdFor(TUmbracoEntity contentInstance)

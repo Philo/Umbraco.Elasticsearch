@@ -306,6 +306,7 @@
     <Compile Include="Content\Impl\ContentIndexer.cs" />
     <Compile Include="Content\Impl\ContentIndexService.cs" />
     <Compile Include="Impl\AliasedIndexContributor.cs" />
+    <Compile Include="UmbracoDocument.cs" />
     <Compile Include="Utils\ContentExtensions.cs" />
     <Compile Include="Utils\ElasticsearchResponseExtensions.cs" />
     <Compile Include="Impl\IndexService.cs" />

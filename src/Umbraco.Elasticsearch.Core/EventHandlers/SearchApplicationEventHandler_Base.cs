@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using AutoMapper;
 using Nest;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
@@ -12,8 +14,10 @@ using Umbraco.Core.Services;
 using Umbraco.Core.Sync;
 using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Impl;
+using Umbraco.Elasticsearch.Core.Utils;
 using Umbraco.Web;
 using Umbraco.Web.Cache;
+using Umbraco.Web.Models.ContentEditing;
 using Umbraco.Web.UI.JavaScript;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
@@ -59,6 +63,8 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             MediaService.Saved += MediaServiceOnSaved;
             MediaService.Deleted += MediaServiceOnDeleted;
 
+            CacheRefresherBase<PageCacheRefresher>.CacheUpdated += CacheRefresherBaseOnCacheUpdated;
+
             foreach (var service in RegisterContentIndexingServices())
             {
                 UmbracoSearchFactory.RegisterContentIndexService(service, service.ShouldIndex);
@@ -75,50 +81,67 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             LogHelper.Info<SearchApplicationEventHandler>($"Active Index: {activeIndex.Name}");
         }
 
+        private void CacheRefresherBaseOnCacheUpdated(PageCacheRefresher sender, CacheRefresherEventArgs cacheRefresherEventArgs)
+        {
+            if (cacheRefresherEventArgs.MessageType == MessageType.RefreshByInstance)
+            {
+                var content = cacheRefresherEventArgs.MessageObject as IContent;
+                if (content != null && !content.IndexSuccess() && content.CreateDate == content.UpdateDate)
+                {
+                    LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>($"First time content publishing via cache refresher for '{content.Name}'");
+                    IndexContentCore(new[] { content }, new EventMessages());
+                }
+            }
+        }
+
         private void ContentServiceOnRolledBack(IContentService sender, RollbackEventArgs<IContent> rollbackEventArgs)
         {
-            IndexContentCore(rollbackEventArgs.Entity.AsEnumerableOfOne(), rollbackEventArgs.Messages);
+            IndexContentCore(rollbackEventArgs.Entity.AsEnumerableOfOne().ToList(), rollbackEventArgs.Messages);
         }
 
         private void ContentServiceOnCopied(IContentService sender, CopyEventArgs<IContent> copyEventArgs)
         {
-            IndexContentCore(copyEventArgs.Copy.AsEnumerableOfOne(), copyEventArgs.Messages);
+            IndexContentCore(copyEventArgs.Copy.AsEnumerableOfOne().ToList(), copyEventArgs.Messages);
         }
 
         #region Event Handlers
         private void ContentServiceOnUnPublished(IPublishingStrategy sender, PublishEventArgs<IContent> publishEventArgs)
         {
-            RemoveContentCore(publishEventArgs.PublishedEntities, publishEventArgs.Messages);
+            RemoveContentCore(publishEventArgs.PublishedEntities.ToList(), publishEventArgs.Messages);
         }
 
         private void ContentServiceOnTrashed(IContentService sender, MoveEventArgs<IContent> moveEventArgs)
         {
-            RemoveContentCore(moveEventArgs.MoveInfoCollection.Select(x => x.Entity), moveEventArgs.Messages);
+            RemoveContentCore(moveEventArgs.MoveInfoCollection.Select(x => x.Entity).ToList(), moveEventArgs.Messages);
         }
 
         private void ContentService_Published(IPublishingStrategy sender, PublishEventArgs<IContent> e)
         {
-            IndexContentCore(e.PublishedEntities, e.Messages);
+            var entitiesAwaitingIndex = e.PublishedEntities.Where(x => !x.IndexSuccess()).ToList();
+            if (entitiesAwaitingIndex.Any())
+            {
+                IndexContentCore(entitiesAwaitingIndex, e.Messages);
+            }
         }
 
         private void ContentServiceOnMoved(IContentService sender, MoveEventArgs<IContent> moveEventArgs)
         {
-            IndexContentCore(moveEventArgs.MoveInfoCollection.Select(x => x.Entity), moveEventArgs.Messages);
+            IndexContentCore(moveEventArgs.MoveInfoCollection.Select(x => x.Entity).ToList(), moveEventArgs.Messages);
         }
 
         private void MediaServiceOnMoved(IMediaService sender, MoveEventArgs<IMedia> moveEventArgs)
         {
-            IndexMediaCore(moveEventArgs.MoveInfoCollection.Select(x => x.Entity), moveEventArgs.Messages);
+            IndexMediaCore(moveEventArgs.MoveInfoCollection.Select(x => x.Entity).ToList(), moveEventArgs.Messages);
         }
 
         private void MediaServiceOnDeleted(IMediaService sender, DeleteEventArgs<IMedia> deleteEventArgs)
         {
-            RemoveMediaCore(deleteEventArgs.DeletedEntities, deleteEventArgs.Messages);
+            RemoveMediaCore(deleteEventArgs.DeletedEntities.ToList(), deleteEventArgs.Messages);
         }
 
         private void MediaServiceOnSaved(IMediaService sender, SaveEventArgs<IMedia> saveEventArgs)
         {
-            IndexMediaCore(saveEventArgs.SavedEntities, saveEventArgs.Messages);
+            IndexMediaCore(saveEventArgs.SavedEntities.ToList(), saveEventArgs.Messages);
         }
 
         private static void InstallServerVars()
