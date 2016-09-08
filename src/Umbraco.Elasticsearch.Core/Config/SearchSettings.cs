@@ -1,3 +1,4 @@
+using System;
 using System.Configuration;
 
 namespace Umbraco.Elasticsearch.Core.Config
@@ -11,8 +12,8 @@ namespace Umbraco.Elasticsearch.Core.Config
             get
             {
                 if (_current == null)
-                    throw new ConfigurationErrorsException(
-                        $"{typeof (SearchSettings<TSearchSettings>)} have not been configured, please ensure Set() is called before accessing this configuration");
+                    throw new InvalidOperationException(
+                        "please ensure Set() is called before accessing this configuration");
                 return _current;
             }
         }

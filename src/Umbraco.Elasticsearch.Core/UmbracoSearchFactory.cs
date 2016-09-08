@@ -83,7 +83,7 @@ namespace Umbraco.Elasticsearch.Core
 
         public static IMediaIndexService GetMediaIndexService(string documentTypeName)
         {
-            return MediaIndexServiceRegistry?.Keys.FirstOrDefault(x => x.DocumentTypeName.Equals(documentTypeName, StringComparison.InvariantCultureIgnoreCase));
+            return MediaIndexServiceRegistry?.Keys.FirstOrDefault(x => x.DocumentTypeName.Equals(documentTypeName, StringComparison.OrdinalIgnoreCase));
         }
 
         public static IContentIndexService GetContentIndexService(IContent content)
@@ -97,14 +97,14 @@ namespace Umbraco.Elasticsearch.Core
         }
         public static IContentIndexService GetContentIndexService(string documentTypeName)
         {
-            return ContentIndexServiceRegistry?.Keys.FirstOrDefault(x => x.DocumentTypeName.Equals(documentTypeName, StringComparison.InvariantCultureIgnoreCase));
+            return ContentIndexServiceRegistry?.Keys.FirstOrDefault(x => x.DocumentTypeName.Equals(documentTypeName, StringComparison.OrdinalIgnoreCase));
         }
 
         public static IElasticClient Client
         {
             get
             {
-                if (_client == null) throw new ConfigurationErrorsException("Elasticsearch client is not available, verify configuration settings");
+                if (_client == null) throw new InvalidOperationException("Elasticsearch client is not available, verify configuration settings");
                 return _client;
             }
         }

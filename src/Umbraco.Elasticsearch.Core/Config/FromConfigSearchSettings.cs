@@ -27,7 +27,7 @@ namespace Umbraco.Elasticsearch.Core.Config
 
         private static IEnumerable<KeyValuePair<string, string>> GetAdditionalData(string prefix)
         {
-            var keys = ConfigurationManager.AppSettings.AllKeys.Where(x => x.StartsWith(prefix)).ToList();
+            var keys = ConfigurationManager.AppSettings.AllKeys.Where(x => x.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)).ToList();
             return keys.Select(appKey =>
             {
                 var key = appKey.Replace(prefix, "");
