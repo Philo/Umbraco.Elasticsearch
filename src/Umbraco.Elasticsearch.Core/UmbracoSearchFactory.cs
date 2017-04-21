@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Nest;
-using Nest.Indexify;
+using Newtonsoft.Json.Linq;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
+using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Media;
 using Umbraco.Elasticsearch.Core.Utils;
 
@@ -127,7 +128,13 @@ namespace Umbraco.Elasticsearch.Core
             return new PluginVersionInfo(pluginVersion,umbracoVersion);
         }
 
-        public static string ActiveIndexName => _client.Infer.DefaultIndex;
+        public static string ActiveIndexName => _client.ConnectionSettings.DefaultIndex;
         public static bool HasActiveIndex { get; set; } = false;
+
+        public static async Task<Version> GetElasticsearchVersionAsync()
+        {
+            var result = await _client.RootNodeInfoAsync(n => n.ErrorTrace());
+            return Version.Parse(result.Version.Number);
+        }
     }
 }

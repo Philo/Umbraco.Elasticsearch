@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Elasticsearch.Net;
 using Nest;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
@@ -43,7 +44,14 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         protected virtual string InitialiseIndexTypeName()
         {
-            return typeof (TUmbracoDocument).GetCustomAttribute<ElasticTypeAttribute>()?.Name;
+            var indexName = _client.Infer.TypeName<TUmbracoDocument>();
+            return typeof (TUmbracoDocument).GetCustomAttribute<ElasticsearchTypeAttribute>()?.Name;
+        }
+
+        public void Index(TUmbracoEntity entity)
+        {
+            if (!UmbracoSearchFactory.HasActiveIndex) throw new InvalidOperationException("Unable to index node without a currently active index");
+            Index(entity, UmbracoSearchFactory.ActiveIndexName);
         }
 
         public void Index(TUmbracoEntity entity, string indexName)
@@ -97,11 +105,11 @@ namespace Umbraco.Elasticsearch.Core.Impl
         public string EntityTypeName { get; } = typeof (TUmbracoDocument).Name;
 
         public string DocumentTypeName { get; } =
-            typeof (TUmbracoDocument).GetCustomAttribute<ElasticTypeAttribute>().Name;
+            typeof (TUmbracoDocument).GetCustomAttribute<ElasticsearchTypeAttribute>().Name;
 
         public long CountOfDocumentsForIndex(string indexName)
         {
-            var response = _client.Count(c => c.Index(indexName).Type(DocumentTypeName));
+            var response = _client.Count<TUmbracoDocument>(c => c.Index(indexName).Type(DocumentTypeName));
             if (response.IsValid)
             {
                 return response.Count;
@@ -115,7 +123,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
         {
             if (ids.Any())
             {
-                return _client.Bulk(b => b.DeleteMany<TUmbracoDocument>(ids, (desc, id) => desc.Index(indexName)).Refresh());
+                return _client.Bulk(b => b.DeleteMany<TUmbracoDocument>(ids, (desc, id) => desc.Index(indexName)).Refresh(Refresh.True));
             }
             return null;
         }
@@ -147,7 +155,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
                 RemoveFromIndex(contentGroups[true].Select(x => x.Id.ToString(CultureInfo.InvariantCulture)).ToList(), indexName);
                 AddOrUpdateIndex(contentGroups[false].Select(CreateCore).Where(x => x != null).ToList(), indexName, pageSize);
             }
-            _client.Refresh(i => i.Index(indexName));
+            _client.Refresh(indexName);
 
             LogHelper.Info(GetType(), () => $"Finished indexing [{DocumentTypeName}] into {indexName}");
         }
@@ -158,7 +166,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         protected virtual void UpdateIndexTypeMappingCore(IElasticClient client, string indexName)
         {
-            client.Map<TUmbracoDocument>(m => m.MapFromAttributes().Index(indexName));
+            client.Map<TUmbracoDocument>(m => m.AutoMap().Index(indexName));
         }
 
         private TUmbracoDocument CreateCore(TUmbracoEntity contentInstance)
@@ -202,9 +210,10 @@ namespace Umbraco.Elasticsearch.Core.Impl
             string indexName = null)
         {
             var idValue = IdFor(entity);
-            if (client.DocumentExists<TUmbracoDocument>(d => d.Id(idValue).Index(indexName)).Exists)
+            var documentPath = DocumentPath<TUmbracoDocument>.Id(idValue);
+            if (client.DocumentExists(documentPath, d => d.Index(indexName)).Exists)
             {
-                client.Delete<TUmbracoDocument>(d => d.Index(indexName).Id(idValue));
+                client.Delete(documentPath, d => d.Index(indexName));
             }
         }
 

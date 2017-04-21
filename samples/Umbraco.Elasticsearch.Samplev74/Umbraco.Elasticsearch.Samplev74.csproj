@@ -179,10 +179,6 @@
       <HintPath>..\..\packages\NEST.1.8.3\lib\net45\Nest.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Nest.Indexify, Version=0.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Nest.Indexify.0.4.0-preview0003\lib\net45\Nest.Indexify.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="Nest.Queryify, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Nest.Queryify.0.7.0-preview0003\lib\net45\Nest.Queryify.dll</HintPath>
       <Private>True</Private>

@@ -1,8 +1,9 @@
 ﻿using System;
+using Elasticsearch.Net;
 using Nest;
-using Nest.Indexify;
 using Umbraco.Core.Logging;
 using Umbraco.Elasticsearch.Core.Config;
+using Umbraco.Elasticsearch.Core.Impl;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
@@ -33,7 +34,9 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
 
         protected virtual IElasticClient ConfigureElasticClient(TSearchSettings searchSettings, string indexName)
         {
-            var connection = new ConnectionSettings(new Uri(searchSettings.Host), indexName);
+            var singleNodeConnectionPool = new SingleNodeConnectionPool(new Uri(searchSettings.Host));
+            var connection = new ConnectionSettings(singleNodeConnectionPool);
+            connection.DefaultIndex(indexName);
             return new ElasticClient(connection);
         }
 

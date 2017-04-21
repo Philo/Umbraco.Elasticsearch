@@ -2,13 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Web;
 using Nest;
-using Nest.Indexify;
-using Nest.Indexify.Contributors.Analysis.English;
-using Nest.Indexify.Contributors.IndexSettings;
-using Umbraco.Core;
 using Umbraco.Elasticsearch.Core;
 using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.EventHandlers;
+using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Media;
 using Umbraco.Elasticsearch.Samplev74.Features.Search.Services.Article;
 using Umbraco.Elasticsearch.Samplev74.Features.Search.Services.Image;
@@ -42,8 +39,8 @@ namespace Umbraco.Elasticsearch.Samplev74.Features.Search
         {
             public UmbracoElasticsearchIndexCreationStrategy(IElasticClient client) : base(client)
             {
-                AddContributor(new EnglishIndexAnalysisContributor());
-                AddContributor(new IndexSettingsContributor(1, 1));
+                //AddContributor(new EnglishIndexAnalysisContributor());
+                //AddContributor(new IndexSettingsContributor(1, 1));
             }
         }
     }
