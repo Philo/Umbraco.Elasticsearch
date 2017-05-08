@@ -86,7 +86,7 @@ namespace Umbraco.Elasticsearch.Core
         {
             return MediaIndexServiceRegistry?.Keys.FirstOrDefault(x => x.DocumentTypeName.Equals(documentTypeName, StringComparison.OrdinalIgnoreCase));
         }
-
+        
         public static IContentIndexService GetContentIndexService(IContent content)
         {
             return ContentIndexServiceRegistry?.FirstOrDefault(x => x.Value(content)).Key;

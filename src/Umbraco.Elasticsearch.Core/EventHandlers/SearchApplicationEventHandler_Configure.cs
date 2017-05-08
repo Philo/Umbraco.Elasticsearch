@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Elasticsearch.Net;
 using Nest;
 using Umbraco.Core.Logging;
@@ -36,6 +37,12 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         {
             var singleNodeConnectionPool = new SingleNodeConnectionPool(new Uri(searchSettings.Host));
             var connection = new ConnectionSettings(singleNodeConnectionPool);
+
+            if (searchSettings.AdditionalData.FirstOrDefault(x => x.Key == UmbElasticsearchConstants.Configuration.EnableDebugMode).Value?.ToLowerInvariant() == "true")
+            {
+                connection.EnableDebugMode();
+            }
+
             connection.DefaultIndex(indexName);
             return new ElasticClient(connection);
         }

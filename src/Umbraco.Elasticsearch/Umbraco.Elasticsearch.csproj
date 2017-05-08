@@ -270,6 +270,7 @@
       <Link>Properties\VersionAssemblyInfo.cs</Link>
     </Compile>
     <Content Include="content\App_Plugins\umbElasticsearch\umbElasticsearch.css" />
+    <Content Include="content\App_Plugins\umbElasticsearch\updateIndexNode.html" />
     <Content Include="readme.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

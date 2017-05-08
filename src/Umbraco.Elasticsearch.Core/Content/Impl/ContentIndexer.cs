@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Umbraco.Core.Logging;
 
 namespace Umbraco.Elasticsearch.Core.Content.Impl
@@ -12,6 +16,7 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
             using (BusyStateManager.Start($"Building content for {indexName}", indexName))
             {
                 LogHelper.Info<ContentIndexer>($"Started building index [{indexName}]");
+
                 foreach (var indexService in UmbracoSearchFactory.GetContentIndexServices())
                 {
                     try

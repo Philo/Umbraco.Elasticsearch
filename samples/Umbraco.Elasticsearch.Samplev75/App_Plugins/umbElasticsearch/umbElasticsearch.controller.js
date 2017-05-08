@@ -176,34 +176,66 @@
     init();
 }
 
+function umbElasticsearchUpdateIndexNodeController($log, $scope, navigationService, notificationsService, umbElasticsearchResource) {
+
+    $scope.cancel = function () {
+        navigationService.hideDialog();
+    }
+
+    $scope.update = function () {
+        var nodeId = $scope.currentNode.id;
+        var nodeType = $scope.currentNode.nodeType;
+
+        umbElasticsearchResource.updateIndexNode(nodeId, nodeType).then(function (response) {
+            navigationService.hideDialog();
+            notificationsService.success("Updated Index Node", "The active index was updated");
+        }, function (error) {
+            navigationService.hideDialog();
+            notificationsService.error("Unable to update node in active index", "The node could not be updated in the active index");
+        });
+    }
+}
+
 angular
     .module("umbraco")
-    .filter('prettyJSON', function () {
-        function prettyPrintJson(json) {
-            return JSON ? JSON.stringify(json, null, "  ") : json;
-        }
-        return prettyPrintJson;
-    })
-    .directive('confirmClick', function ($window) {
-        var i = 0;
-        return {
-            restrict: 'A',
-            priority: 1,
-            compile: function (tElem, tAttrs) {
-                var fn = '$$confirmClick' + i++,
-                    _ngClick = tAttrs.ngClick;
-                tAttrs.ngClick = fn + '($event)';
-
-                return function (scope, elem, attrs) {
-                    var confirmMsg = attrs.confirmClick || 'Are you sure?';
-
-                    scope[fn] = function (event) {
-                        if ($window.confirm(confirmMsg)) {
-                            scope.$eval(_ngClick, { $event: event });
-                        }
-                    };
-                };
+    .filter('prettyJSON',
+        function() {
+            function prettyPrintJson(json) {
+                return JSON ? JSON.stringify(json, null, "  ") : json;
             }
-        };
-    })
-    .controller("umbElasticsearchController", ["$log", "$scope", "$timeout", "notificationsService", "umbElasticsearchResource", "$q", umbElasticsearchController]);
+
+            return prettyPrintJson;
+        })
+    .directive('confirmClick',
+        function($window) {
+            var i = 0;
+            return {
+                restrict: 'A',
+                priority: 1,
+                compile: function(tElem, tAttrs) {
+                    var fn = '$$confirmClick' + i++,
+                        _ngClick = tAttrs.ngClick;
+                    tAttrs.ngClick = fn + '($event)';
+
+                    return function(scope, elem, attrs) {
+                        var confirmMsg = attrs.confirmClick || 'Are you sure?';
+
+                        scope[fn] = function(event) {
+                            if ($window.confirm(confirmMsg)) {
+                                scope.$eval(_ngClick, { $event: event });
+                            }
+                        };
+                    };
+                }
+            };
+        })
+    .controller("umbElasticsearchController",
+        [
+            "$log", "$scope", "$timeout", "notificationsService", "umbElasticsearchResource", "$q",
+            umbElasticsearchController
+        ])
+    .controller("umbElasticsearchUpdateIndexNodeController",
+        [
+            "$log", "$scope", "navigationService", "notificationsService", "umbElasticsearchResource",
+            umbElasticsearchUpdateIndexNodeController
+        ]);

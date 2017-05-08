@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using AutoMapper;
 using Nest;
+using umbraco.cms.presentation.Trees;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Events;
@@ -18,6 +19,8 @@ using Umbraco.Elasticsearch.Core.Utils;
 using Umbraco.Web;
 using Umbraco.Web.Cache;
 using Umbraco.Web.Models.ContentEditing;
+using Umbraco.Web.Models.Trees;
+using Umbraco.Web.Trees;
 using Umbraco.Web.UI.JavaScript;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
@@ -82,10 +85,55 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                 UmbracoSearchFactory.RegisterMediaIndexService(service, service.ShouldIndex);
             }
 
+            AddReIndexForKnownDocumentTypes();
+
             // check for activate index
             var m = new IndexManager();
             var activeIndex = m.IndicesInfo().Result.FirstOrDefault(x => x.Status == IndexStatusOption.Active);
             LogHelper.Info<SearchApplicationEventHandler>($"Active Index: {activeIndex.Name}");
+        }
+
+        private void AddReIndexForKnownDocumentTypes()
+        {
+            if (SearchSettings<TSearchSettings>.Current.GetAdditionalData(UmbElasticsearchConstants.Configuration.EnableNodeLevelReIndex, true))
+            {
+                TreeControllerBase.MenuRendering += (sender, args) =>
+                {
+                    if (int.TryParse(args.NodeId, out int nodeId))
+                    {
+                        if (sender.TreeAlias == Constants.Trees.Content)
+                        {
+                            var node = sender.Umbraco.TypedContent(nodeId);
+                            var contentService = UmbracoSearchFactory.GetContentIndexService(node.DocumentTypeAlias);
+                            if (contentService != null)
+                            {
+                                var item = new MenuItem("umbElasticsearch.reindex", "Re-Index")
+                                {
+                                    Icon = "sync",
+                                    SeperatorBefore = true
+                                };
+                                item.LaunchDialogView($"/App_Plugins/{UmbElasticsearchConstants.Configuration.Prefix}/updateIndexNode.html", $"Re-index '{node.Name}' Now");
+                                args.Menu.Items.Add(item);
+                            }
+                        }
+                        else if (sender.TreeAlias == Constants.Trees.Media)
+                        {
+                            var node = sender.Umbraco.TypedMedia(nodeId);
+                            var mediaService = UmbracoSearchFactory.GetMediaIndexService(node.DocumentTypeAlias);
+                            if (mediaService != null)
+                            {
+                                var item = new MenuItem("umbElasticsearch.reindex", "Re-Index")
+                                {
+                                    Icon = "sync",
+                                    SeperatorBefore = true
+                                };
+                                item.LaunchDialogView($"/App_Plugins/{UmbElasticsearchConstants.Configuration.Prefix}/updateIndexNode.html", $"Re-index '{node.Name}' Now");
+                                args.Menu.Items.Add(item);
+                            }
+                        }
+                    }
+                };
+            }
         }
 
         private void CacheRefresherBaseOnCacheUpdated(PageCacheRefresher sender, CacheRefresherEventArgs cacheRefresherEventArgs)

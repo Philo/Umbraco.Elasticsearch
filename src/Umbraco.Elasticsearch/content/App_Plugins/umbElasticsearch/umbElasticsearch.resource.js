@@ -53,6 +53,9 @@ angular.module("umbraco.resources")
             },
             isBusy: function () {
                 return umbRequestHelper.resourcePromise($http.get(apiUrl("IsBusy")));
+            },
+            updateIndexNode: function(nodeId, nodeType) {
+                return umbRequestHelper.resourcePromise($http.post(apiUrl("UpdateIndexNode"), { nodeId : nodeId, nodeType: nodeType}));
             }
         };
     });

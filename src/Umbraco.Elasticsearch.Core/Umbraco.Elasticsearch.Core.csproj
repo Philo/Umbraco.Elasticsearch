@@ -278,7 +278,6 @@
     <Compile Include="Content\IContentIndexService.cs" />
     <Compile Include="Content\Impl\ContentIndexer.cs" />
     <Compile Include="Content\Impl\ContentIndexService.cs" />
-    <Compile Include="Impl\AliasedIndexContributor.cs" />
     <Compile Include="Impl\ElasticsearchIndexCreationStrategy.cs" />
     <Compile Include="IElasticsearchIndexCreationStrategy.cs" />
     <Compile Include="Utils\ContentExtensions.cs" />

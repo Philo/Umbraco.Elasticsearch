@@ -8,6 +8,8 @@
             public const string IndexBatchSize = nameof(IndexBatchSize);
             public const string ExcludeFromIndexPropertyAlias = nameof(ExcludeFromIndexPropertyAlias);
             public const string DisableContentCacheUpdatedEventHook = nameof(DisableContentCacheUpdatedEventHook);
+            public const string EnableDebugMode = nameof(EnableDebugMode);
+            public const string EnableNodeLevelReIndex = nameof(EnableNodeLevelReIndex);
         }
 
         public static class Properties
