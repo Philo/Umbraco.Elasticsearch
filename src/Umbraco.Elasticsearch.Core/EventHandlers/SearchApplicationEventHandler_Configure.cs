@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Elasticsearch.Net;
 using Nest;
@@ -32,18 +33,29 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             var indexName = indexResolver.Resolve(searchSettings, searchSettings.IndexName);
             return ConfigureElasticClient(searchSettings, indexName);
         }
-
-        protected virtual IElasticClient ConfigureElasticClient(TSearchSettings searchSettings, string indexName)
+        
+        protected virtual IConnectionSettingsValues ConfigureConnectionSettings(TSearchSettings searchSettings, string indexName)
         {
             var singleNodeConnectionPool = new SingleNodeConnectionPool(new Uri(searchSettings.Host));
             var connection = new ConnectionSettings(singleNodeConnectionPool);
 
-            if (searchSettings.AdditionalData.FirstOrDefault(x => x.Key == UmbElasticsearchConstants.Configuration.EnableDebugMode).Value?.ToLowerInvariant() == "true")
+            if (searchSettings.GetAdditionalData<bool>(UmbElasticsearchConstants.Configuration.EnableDebugMode))
             {
-                connection.EnableDebugMode();
+                connection.EnableDebugMode(apiCallDetails =>
+                {
+                    LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(apiCallDetails.DebugInformation);
+                    Debug.WriteLine(apiCallDetails.DebugInformation);
+                });
             }
 
             connection.DefaultIndex(indexName);
+            return connection;
+        }
+
+        protected virtual IElasticClient ConfigureElasticClient(TSearchSettings searchSettings, string indexName)
+        {
+            var connection = ConfigureConnectionSettings(searchSettings, indexName);
+            
             return new ElasticClient(connection);
         }
 

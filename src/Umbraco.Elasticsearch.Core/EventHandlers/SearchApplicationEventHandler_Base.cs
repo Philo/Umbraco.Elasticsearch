@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using AutoMapper;
-using Nest;
-using umbraco.cms.presentation.Trees;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Events;
@@ -14,11 +10,8 @@ using Umbraco.Core.Publishing;
 using Umbraco.Core.Services;
 using Umbraco.Core.Sync;
 using Umbraco.Elasticsearch.Core.Config;
-using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Utils;
-using Umbraco.Web;
 using Umbraco.Web.Cache;
-using Umbraco.Web.Models.ContentEditing;
 using Umbraco.Web.Models.Trees;
 using Umbraco.Web.Trees;
 using Umbraco.Web.UI.JavaScript;
@@ -86,11 +79,6 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             }
 
             AddReIndexForKnownDocumentTypes();
-
-            // check for activate index
-            var m = new IndexManager();
-            var activeIndex = m.IndicesInfo().Result.FirstOrDefault(x => x.Status == IndexStatusOption.Active);
-            LogHelper.Info<SearchApplicationEventHandler>($"Active Index: {activeIndex.Name}");
         }
 
         private void AddReIndexForKnownDocumentTypes()

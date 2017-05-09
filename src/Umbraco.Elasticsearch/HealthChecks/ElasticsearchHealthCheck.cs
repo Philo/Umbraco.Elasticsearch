@@ -43,7 +43,7 @@ namespace Umbraco.Elasticsearch.HealthChecks
         {
             var client = UmbracoSearchFactory.Client;
             var result = client.Ping(p => p.Human());
-            
+
             return new HealthCheckStatus(result.IsValid ? "Configured host is up and responding" : result.OriginalException.Message)
             {
                 ResultType = result.IsValid ? StatusResultType.Success : StatusResultType.Error
