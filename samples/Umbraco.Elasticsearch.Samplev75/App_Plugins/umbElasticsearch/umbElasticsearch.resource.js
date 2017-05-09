@@ -7,7 +7,7 @@ angular.module("umbraco.resources")
 
         return {
             getVersionNumber: function () {
-                return $http.get(apiUrl("SearchVersionInfo")).then(function (data) {
+                return $http.get(apiUrl("SearchVersionInfo")).then(function(data) {
                     return data.data.version;
                 });
             },
@@ -54,8 +54,8 @@ angular.module("umbraco.resources")
             isBusy: function () {
                 return umbRequestHelper.resourcePromise($http.get(apiUrl("IsBusy")));
             },
-            updateIndexNode: function (nodeId, nodeType) {
-                return umbRequestHelper.resourcePromise($http.post(apiUrl("UpdateIndexNode"), { nodeId: nodeId, nodeType: nodeType }));
+            updateIndexNode: function(nodeId, nodeType) {
+                return umbRequestHelper.resourcePromise($http.post(apiUrl("UpdateIndexNode"), { nodeId : nodeId, nodeType: nodeType}));
             }
         };
     });

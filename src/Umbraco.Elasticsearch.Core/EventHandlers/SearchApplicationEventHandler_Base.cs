@@ -11,6 +11,7 @@ using Umbraco.Core.Services;
 using Umbraco.Core.Sync;
 using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Utils;
+using Umbraco.Web;
 using Umbraco.Web.Cache;
 using Umbraco.Web.Models.Trees;
 using Umbraco.Web.Trees;

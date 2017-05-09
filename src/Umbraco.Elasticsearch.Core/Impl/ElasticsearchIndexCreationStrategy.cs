@@ -1,16 +1,19 @@
 using System;
 using System.Threading.Tasks;
 using Nest;
+using Umbraco.Elasticsearch.Core.Config;
 
 namespace Umbraco.Elasticsearch.Core.Impl
 {
     public abstract class ElasticsearchIndexCreationStrategy : IElasticsearchIndexCreationStrategy
     {
         private readonly IElasticClient client;
+        private readonly ISearchIndexNameResolver indexNameResolver;
 
-        protected ElasticsearchIndexCreationStrategy(IElasticClient client)
+        protected ElasticsearchIndexCreationStrategy(IElasticClient client, ISearchIndexNameResolver indexNameResolver)
         {
             this.client = client;
+            this.indexNameResolver = indexNameResolver;
         }
 
         protected virtual CreateIndexDescriptor WithCreateIndexDescriptor(CreateIndexDescriptor descriptor)
@@ -25,38 +28,28 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         public void Create()
         {
-            // just create a new index, do not activate, so no aliasing
-
-            var newindexName = $"{UmbracoSearchFactory.Client.ConnectionSettings.DefaultIndex}-{DateTime.UtcNow:yyyyMMddHHmmss}";
+            var newindexName = indexNameResolver.ResolveUniqueIndexName(UmbracoSearchFactory.ActiveIndexName);
 
             var result = client.CreateIndex(newindexName, WithCreateIndexDescriptorCore);
 
             if (result.IsValid)
             {
-                // adds type mappings
                 Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping(newindexName));
                 Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping(newindexName));
             }
-
-            // exceptions!
         }
 
         public async Task CreateAsync()
         {
-            // just create a new index, do not activate, so no aliasing
-
-            var newindexName = $"{UmbracoSearchFactory.Client.ConnectionSettings.DefaultIndex}-{DateTime.UtcNow:yyyyMMddHHmmss}";
+            var newindexName = indexNameResolver.ResolveUniqueIndexName(UmbracoSearchFactory.ActiveIndexName);
 
             var result = await client.CreateIndexAsync(newindexName, WithCreateIndexDescriptorCore).ConfigureAwait(false);
 
             if (result.IsValid)
             {
-                // adds type mappings
                 Parallel.ForEach(UmbracoSearchFactory.GetContentIndexServices(), c => c.UpdateIndexTypeMapping(newindexName));
                 Parallel.ForEach(UmbracoSearchFactory.GetMediaIndexServices(), c => c.UpdateIndexTypeMapping(newindexName));
             }
-
-            // exceptions!
         }
     }
 }

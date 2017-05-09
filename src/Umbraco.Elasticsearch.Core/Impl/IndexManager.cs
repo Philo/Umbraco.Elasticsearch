@@ -88,8 +88,18 @@ namespace Umbraco.Elasticsearch.Core.Impl
             var mappings = response.IsValid ? response.Mappings : new ReadOnlyDictionary<string, IReadOnlyDictionary<string, TypeMapping>>(null);
             var stream = new MemoryStream();
             client.Serializer.Serialize(mappings, stream);
-            var r = new StreamReader(stream);
-            return JObject.Parse(r.ReadToEnd());
+            if (stream.CanSeek)
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+            }
+
+            string jsonContent;
+            using (var r = new StreamReader(stream))
+            {
+                jsonContent = r.ReadToEnd();
+            }
+
+            return string.IsNullOrWhiteSpace(jsonContent) ? null : JObject.Parse(jsonContent);
         }
 
         private IndexStatusOption GetStatus(string indexName)

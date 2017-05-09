@@ -17,9 +17,12 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             try
             {
                 if(string.IsNullOrWhiteSpace(searchSettings.IndexName)) throw new ArgumentNullException(nameof(searchSettings.IndexName), "No indexName configured.  Ensure you have set am index name via ISearchSettings");
-                var client = ConfigureElasticClient(searchSettings);
+                var indexNameResolver = GetIndexNameResolver(searchSettings);
+                var client = ConfigureElasticClient(searchSettings, indexNameResolver);
+                var indexStrategy = GetIndexCreationStrategy(client, indexNameResolver);
+
                 UmbracoSearchFactory.SetDefaultClient(client);
-                UmbracoSearchFactory.RegisterIndexStrategy(GetIndexCreationStrategy(client));
+                UmbracoSearchFactory.RegisterIndexStrategy(indexStrategy);
             }
             catch (Exception ex)
             {
@@ -27,14 +30,19 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             }
         }
 
-        protected virtual IElasticClient ConfigureElasticClient(TSearchSettings searchSettings)
+        protected virtual ISearchIndexNameResolver GetIndexNameResolver(TSearchSettings searchSettings)
         {
-            var indexResolver = new DefaultIndexNameResolver();
-            var indexName = indexResolver.Resolve(searchSettings, searchSettings.IndexName);
-            return ConfigureElasticClient(searchSettings, indexName);
+            return new DefaultIndexNameResolver(searchSettings);
         }
-        
-        protected virtual IConnectionSettingsValues ConfigureConnectionSettings(TSearchSettings searchSettings, string indexName)
+
+        private IElasticClient ConfigureElasticClient(TSearchSettings searchSettings, ISearchIndexNameResolver indexNameResolver)
+        {
+            var indexName = indexNameResolver.ResolveActiveIndexName(searchSettings.IndexName);
+            var connection = ConfigureConnectionSettings(searchSettings, indexName);
+            return ConfigureElasticClient(connection, searchSettings, indexName);
+        }
+
+        protected IConnectionSettingsValues ConfigureConnectionSettings(TSearchSettings searchSettings, string indexName)
         {
             var singleNodeConnectionPool = new SingleNodeConnectionPool(new Uri(searchSettings.Host));
             var connection = new ConnectionSettings(singleNodeConnectionPool);
@@ -49,16 +57,20 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             }
 
             connection.DefaultIndex(indexName);
+
+            ModifyConnectionSettings(connection, searchSettings, indexName);
             return connection;
         }
 
-        protected virtual IElasticClient ConfigureElasticClient(TSearchSettings searchSettings, string indexName)
+        protected virtual void ModifyConnectionSettings(ConnectionSettings connectionSettings, TSearchSettings searchSettings, string indexName)
         {
-            var connection = ConfigureConnectionSettings(searchSettings, indexName);
-            
+        }
+
+        protected virtual IElasticClient ConfigureElasticClient(IConnectionSettingsValues connection, TSearchSettings searchSettings, string indexName)
+        {
             return new ElasticClient(connection);
         }
 
-        protected abstract IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client);
+        protected abstract IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client, ISearchIndexNameResolver indexNameResolver);
     }
 }

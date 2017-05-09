@@ -156,9 +156,9 @@ namespace Umbraco.Elasticsearch.Admin.Api
         }
 
         [HttpPost]
-        public async Task<IHttpActionResult> GetIndexInfo([FromBody] string indexName)
+        public async Task<IHttpActionResult> GetIndexInfo([FromBody] string index)
         {
-            var mappings = await indexManager.GetIndexMappingInfo(indexName);
+            var mappings = await indexManager.GetIndexMappingInfo(index);
             return Ok(mappings);
         }
 

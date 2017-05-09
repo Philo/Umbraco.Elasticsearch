@@ -2,6 +2,7 @@ namespace Umbraco.Elasticsearch.Core.Config
 {
     public interface ISearchIndexNameResolver
     {
-        string Resolve(ISearchSettings searchSettings, string indexName);
+        string ResolveUniqueIndexName(string indexName);
+        string ResolveActiveIndexName(string indexName);
     }
 }
