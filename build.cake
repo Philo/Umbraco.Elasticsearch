@@ -154,8 +154,7 @@ Task("Package-Umbraco-Elasticsearch-Core")
                 new NuSpecContent { Source = "Umbraco.Elasticsearch.Core.pdb", Target = "lib/net452" },
             },
             Dependencies = new [] {
-                new NuSpecDependency { Id = "Nest.Indexify", Version = "0.4.0" },
-                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "[7.3.0,8.0)" },
+                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "[7.5,8)" }
             }
         };
         NuGetPack("./src/Umbraco.Elasticsearch.Core/Umbraco.Elasticsearch.Core.nuspec", settings);                     
@@ -197,8 +196,7 @@ Task("Package-Umbraco-Elasticsearch")
                 new NuSpecContent { Source = "content/App_Plugins/umbElasticsearch/**/*", Target = "" }
             },
             Dependencies = new [] {
-                new NuSpecDependency { Id = "Nest.Indexify", Version = "0.4.0" },
-                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "[7.3.0,8.0)" },
+                new NuSpecDependency { Id = "UmbracoCms.Core", Version = "[7.5,8)" },
                 new NuSpecDependency { Id = "Umbraco.Elasticsearch.Core", Version = "[" +versionInfo.NuGetVersionV2 +"]" }
             }
         };
@@ -216,7 +214,7 @@ Task("Update-AppVeyor-Build-Number")
     .WithCriteria(() => AppVeyor.IsRunningOnAppVeyor)
     .Does(() =>
 {
-    AppVeyor.UpdateBuildVersion(versionInfo.FullSemVer +" | " +AppVeyor.Environment.Build.Number);
+    AppVeyor.UpdateBuildVersion(versionInfo.FullSemVer +"." +AppVeyor.Environment.Build.Number);
 });
 
 //////////////////////////////////////////////////////////////////////

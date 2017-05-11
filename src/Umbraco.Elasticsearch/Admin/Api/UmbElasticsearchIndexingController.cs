@@ -1,30 +1,34 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web.Caching;
 using System.Web.Http;
+using umbraco.cms.businesslogic.contentitem;
+using Umbraco.Core.Models;
 using Umbraco.Elasticsearch.Core;
 using Umbraco.Elasticsearch.Core.Content.Impl;
 using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Media.Impl;
 using Umbraco.Web.Editors;
 using Umbraco.Web.Mvc;
+using Task = System.Threading.Tasks.Task;
 
 namespace Umbraco.Elasticsearch.Admin.Api
 {
     [PluginController("umbElasticsearch")]
     public class UmbElasticsearchIndexingController : UmbracoAuthorizedJsonController
     {
-        private readonly IIndexManager _indexManager;
-        private readonly string _indexName;
+        private readonly IIndexManager indexManager;
+        private readonly string indexName;
 
         public UmbElasticsearchIndexingController(IIndexManager indexManager)
         {
-            _indexManager = indexManager;
+            this.indexManager = indexManager;
         }
 
         public UmbElasticsearchIndexingController() : this(new IndexManager())
         {
-            _indexName = UmbracoSearchFactory.ActiveIndexName;
+            indexName = UmbracoSearchFactory.ActiveIndexName;
         }
 
         [HttpGet]
@@ -36,7 +40,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
             {
                 x.DocumentTypeName,
                 x.GetType().Name,
-                Count = x.CountOfDocumentsForIndex(_indexName)
+                Count = x.CountOfDocumentsForIndex(indexName)
             }));
         }
 
@@ -49,26 +53,26 @@ namespace Umbraco.Elasticsearch.Admin.Api
             {
                 x.DocumentTypeName,
                 x.GetType().Name,
-                Count = x.CountOfDocumentsForIndex(_indexName)
+                Count = x.CountOfDocumentsForIndex(indexName)
             }));
         }
 
         [HttpPost]
         public async Task DeleteIndexByName([FromBody] string indexName)
         {
-            await _indexManager.DeleteIndexAsync(indexName);
+            await indexManager.DeleteIndexAsync(indexName);
         }
 
         [HttpPost]
         public async Task ActivateIndexByName([FromBody] string indexName)
         {
-            await _indexManager.ActivateIndexAsync(indexName);
+            await indexManager.ActivateIndexAsync(indexName);
         }
 
         [HttpGet]
         public async Task<IHttpActionResult> IndicesInfo()
         {
-            var info = await _indexManager.IndicesInfo();
+            var info = await indexManager.IndicesInfo();
             return Ok(info);
         }
         
@@ -117,7 +121,7 @@ namespace Umbraco.Elasticsearch.Admin.Api
 
         private async Task<Version> GetVersionInfo()
         {
-            return await _indexManager.GetElasticsearchVersion();
+            return await indexManager.GetElasticsearchVersion();
         }
 
         [HttpGet]
@@ -152,10 +156,68 @@ namespace Umbraco.Elasticsearch.Admin.Api
         }
 
         [HttpPost]
-        public async Task<IHttpActionResult> GetIndexInfo([FromBody] string indexName)
+        public async Task<IHttpActionResult> GetIndexInfo([FromBody] string index)
         {
-            var mappings = await _indexManager.GetIndexMappingInfo(indexName);
+            var mappings = await indexManager.GetIndexMappingInfo(index);
             return Ok(mappings);
+        }
+
+        public class UpdateIndexNodeModel
+        {
+            public int NodeId { get; set; }
+            public PublishedItemType NodeType { get; set; }
+        }
+
+        [HttpPost]
+        public IHttpActionResult UpdateIndexNode(UpdateIndexNodeModel model)
+        {
+            switch (model.NodeType)
+            {
+                case PublishedItemType.Content:
+                    if (ReindexContentNode(model.NodeId))
+                    {
+                        return Ok();
+                    }
+                    break;
+                case PublishedItemType.Media:
+                    if (ReindexMediaNode(model.NodeId))
+                    {
+                        return Ok();
+                    }
+                    break;
+            }
+
+            return BadRequest();
+        }
+
+        private bool ReindexMediaNode(int nodeId)
+        {
+            var mediaNode = ApplicationContext.Services.MediaService.GetById(nodeId);
+            if (mediaNode != null)
+            {
+                var mediaIndexService = UmbracoSearchFactory.GetMediaIndexService(mediaNode);
+                if (mediaIndexService != null)
+                {
+                    mediaIndexService.Index(mediaNode, UmbracoSearchFactory.ActiveIndexName);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private bool ReindexContentNode(int nodeId)
+        {
+            var contentNode = ApplicationContext.Services.ContentService.GetById(nodeId);
+            if (contentNode != null)
+            {
+                var contentIndexService = UmbracoSearchFactory.GetContentIndexService(contentNode);
+                if (contentIndexService != null)
+                {
+                    contentIndexService.Index(contentNode, UmbracoSearchFactory.ActiveIndexName);
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

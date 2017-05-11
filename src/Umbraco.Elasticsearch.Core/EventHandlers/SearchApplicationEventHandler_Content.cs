@@ -20,7 +20,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
         }
 
         /// <summary>
-        /// Override me to alter the indexing process for invidual content items
+        /// Override me to alter the indexing process for individual content items
         /// </summary>
         /// <param name="indexService">the index service applicable to the <param name="item">content</param></param>
         /// <param name="item">content item</param>

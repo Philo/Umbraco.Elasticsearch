@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using System.Web;
 using Nest;
-using Nest.Indexify;
-using Nest.Indexify.Contributors.Analysis.English;
-using Nest.Indexify.Contributors.IndexSettings;
 using Umbraco.Elasticsearch.Core;
+using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
 using Umbraco.Elasticsearch.Core.EventHandlers;
+using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Media;
 using Umbraco.Elasticsearch.Samplev75.Features.Search.Services.Article;
 using Umbraco.Elasticsearch.Samplev75.Features.Search.Services.Image;
@@ -21,9 +20,9 @@ namespace Umbraco.Elasticsearch.Samplev75.Features.Search
             SearchifyMvcConfig.Configure(HttpContext.Current.ApplicationInstance);
         }
         
-        protected override IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client)
+        protected override IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client, ISearchIndexNameResolver indexNameResolver)
         {
-            return new UmbracoElasticsearchIndexCreationStrategy(client);
+            return new UmbracoElasticsearchIndexCreationStrategy(client, indexNameResolver);
         }
 
         protected override IEnumerable<IContentIndexService> RegisterContentIndexingServices()
@@ -38,10 +37,8 @@ namespace Umbraco.Elasticsearch.Samplev75.Features.Search
 
         internal class UmbracoElasticsearchIndexCreationStrategy : ElasticsearchIndexCreationStrategy
         {
-            public UmbracoElasticsearchIndexCreationStrategy(IElasticClient client) : base(client)
+            public UmbracoElasticsearchIndexCreationStrategy(IElasticClient client, ISearchIndexNameResolver indexNameResolver) : base(client, indexNameResolver)
             {
-                AddContributor(new EnglishIndexAnalysisContributor());
-                AddContributor(new IndexSettingsContributor(1, 1));
             }
         }
     }

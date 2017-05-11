@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Nest;
-using Nest.Indexify;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using Umbraco.Core.Logging;
 using Umbraco.Web;
 
 namespace Umbraco.Elasticsearch.Core.Impl
@@ -31,26 +31,20 @@ namespace Umbraco.Elasticsearch.Core.Impl
     }
 
     public class IndexManager : IIndexManager {
-        private readonly IElasticClient _client;
-        private readonly IElasticsearchIndexCreationStrategy _indexStrategy;
+        private readonly IElasticClient client;
+        private readonly IElasticsearchIndexCreationStrategy indexStrategy;
 
         public IndexManager() : this(UmbracoSearchFactory.Client, UmbracoSearchFactory.GetIndexStrategy()) { }
 
         public IndexManager(IElasticClient client, IElasticsearchIndexCreationStrategy indexStrategy)
         {
-            _client = client;
-            _indexStrategy = indexStrategy;
+            this.client = client;
+            this.indexStrategy = indexStrategy;
         }
 
         public async Task CreateAsync(bool activate = false)
         {
-            var aliasContributor = new AliasedIndexContributor(activate);
-            aliasContributor.OnSuccessEventHandler += 
-                (sender, args) =>
-                    LogHelper.Info<IndexManager>(
-                        $"Search index '{args.IndexAliasedTo}' has been created (activated: {args.Activated})");
-
-            await _indexStrategy.CreateAsync(aliasContributor);
+            await indexStrategy.CreateAsync();
         }
         
         public async Task DeleteIndexAsync(string indexName)
@@ -59,14 +53,15 @@ namespace Umbraco.Elasticsearch.Core.Impl
                 BusyStateManager.Start(
                     $"Deleting {indexName} triggered by '{UmbracoContext.Current.Security.CurrentUser.Name}'", indexName))
             {
-                await _client.DeleteIndexAsync(d => d.Index(indexName));
+                await client.DeleteIndexAsync(indexName);
             }
         }
 
         public async Task<IEnumerable<IndexStatusInfo>> IndicesInfo()
         {
-            var response = await _client.IndicesStatsAsync();
+            // TODO : validate usage and response here
             var indexAliasName = UmbracoSearchFactory.ActiveIndexName;
+            var response = await client.IndicesStatsAsync($"{indexAliasName}-*");
             var indexInfo = response.Indices.Where(x => x.Key.StartsWith($"{indexAliasName}-")).Select(x => new IndexStatusInfo
             {
                 Name = x.Key,
@@ -81,23 +76,43 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         public async Task<Version> GetElasticsearchVersion()
         {
-            var info = await _client.RootNodeInfoAsync();
+            var info = await client.RootNodeInfoAsync();
             return Version.Parse(info.IsValid ? info.Version.Number : "0.0.0");
         }
 
         public async Task<JObject> GetIndexMappingInfo(string indexName)
         {
-            var response = await _client.GetMappingAsync(new GetMappingRequest(indexName, "*"));
+            var response = await client.GetMappingAsync(new GetMappingRequest(indexName, "*"));
 
-            var mappings = response.IsValid ? response.Mappings : new Dictionary<string, IList<TypeMapping>>();
-            var raw = _client.Serializer.Serialize(mappings);
-            return JObject.Parse(Encoding.UTF8.GetString(raw));
+            // TODO : Validate here
+            var mappings = response.IsValid ? response.Mappings : new ReadOnlyDictionary<string, IReadOnlyDictionary<string, TypeMapping>>(null);
+            var stream = new MemoryStream();
+            client.Serializer.Serialize(mappings, stream);
+            if (stream.CanSeek)
+            {
+                stream.Seek(0, SeekOrigin.Begin);
+            }
+
+            string jsonContent;
+            using (var r = new StreamReader(stream))
+            {
+                jsonContent = r.ReadToEnd();
+            }
+
+            return string.IsNullOrWhiteSpace(jsonContent) ? null : JObject.Parse(jsonContent);
         }
 
         private IndexStatusOption GetStatus(string indexName)
         {
             if (BusyStateManager.IsBusy && BusyStateManager.IndexName.Equals(indexName, StringComparison.OrdinalIgnoreCase)) return IndexStatusOption.Busy;
-            return _client.AliasExists(x => x.Index(indexName).Name(UmbracoSearchFactory.ActiveIndexName)).Exists ? IndexStatusOption.Active : IndexStatusOption.None;
+            var aliases = client.GetAliasesPointingToIndex(indexName).ToList();
+
+            if (aliases.Any(x => x.Name.Equals(UmbracoSearchFactory.ActiveIndexName, StringComparison.OrdinalIgnoreCase)))
+            {
+                return IndexStatusOption.Active;
+            }
+
+            return IndexStatusOption.None;
         }
 
         public async Task ActivateIndexAsync(string indexName)

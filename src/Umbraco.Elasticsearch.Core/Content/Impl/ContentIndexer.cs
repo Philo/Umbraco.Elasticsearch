@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Umbraco.Core.Logging;
 
 namespace Umbraco.Elasticsearch.Core.Content.Impl
@@ -7,11 +11,12 @@ namespace Umbraco.Elasticsearch.Core.Content.Impl
     {
         public void Build(string indexName)
         {
-            var indexExists = UmbracoSearchFactory.Client.IndexExists(i => i.Index(indexName))?.Exists ?? false;
-            if(!indexExists) throw new InvalidOperationException($"'{indexName}' not available, please ensure you have created an index with this name");
+            var indexExists = UmbracoSearchFactory.Client.IndexExists(indexName)?.Exists ?? false;
+            if (!indexExists) throw new InvalidOperationException($"'{indexName}' not available, please ensure you have created an index with this name");
             using (BusyStateManager.Start($"Building content for {indexName}", indexName))
             {
                 LogHelper.Info<ContentIndexer>($"Started building index [{indexName}]");
+
                 foreach (var indexService in UmbracoSearchFactory.GetContentIndexServices())
                 {
                     try

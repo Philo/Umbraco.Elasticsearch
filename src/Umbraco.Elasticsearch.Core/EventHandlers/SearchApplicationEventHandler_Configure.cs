@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using Elasticsearch.Net;
 using Nest;
-using Nest.Indexify;
 using Umbraco.Core.Logging;
 using Umbraco.Elasticsearch.Core.Config;
+using Umbraco.Elasticsearch.Core.Impl;
 
 namespace Umbraco.Elasticsearch.Core.EventHandlers
 {
@@ -14,9 +17,12 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             try
             {
                 if(string.IsNullOrWhiteSpace(searchSettings.IndexName)) throw new ArgumentNullException(nameof(searchSettings.IndexName), "No indexName configured.  Ensure you have set am index name via ISearchSettings");
-                var client = ConfigureElasticClient(searchSettings);
+                var indexNameResolver = GetIndexNameResolver(searchSettings);
+                var client = ConfigureElasticClient(searchSettings, indexNameResolver);
+                var indexStrategy = GetIndexCreationStrategy(client, indexNameResolver);
+
                 UmbracoSearchFactory.SetDefaultClient(client);
-                UmbracoSearchFactory.RegisterIndexStrategy(GetIndexCreationStrategy(client));
+                UmbracoSearchFactory.RegisterIndexStrategy(indexStrategy);
             }
             catch (Exception ex)
             {
@@ -24,19 +30,47 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
             }
         }
 
-        protected virtual IElasticClient ConfigureElasticClient(TSearchSettings searchSettings)
+        protected virtual ISearchIndexNameResolver GetIndexNameResolver(TSearchSettings searchSettings)
         {
-            var indexResolver = new DefaultIndexNameResolver();
-            var indexName = indexResolver.Resolve(searchSettings, searchSettings.IndexName);
-            return ConfigureElasticClient(searchSettings, indexName);
+            return new DefaultIndexNameResolver(searchSettings);
         }
 
-        protected virtual IElasticClient ConfigureElasticClient(TSearchSettings searchSettings, string indexName)
+        private IElasticClient ConfigureElasticClient(TSearchSettings searchSettings, ISearchIndexNameResolver indexNameResolver)
         {
-            var connection = new ConnectionSettings(new Uri(searchSettings.Host), indexName);
+            var indexName = indexNameResolver.ResolveActiveIndexName(searchSettings.IndexName);
+            var connection = ConfigureConnectionSettings(searchSettings, indexName);
+            return ConfigureElasticClient(connection, searchSettings, indexName);
+        }
+
+        protected IConnectionSettingsValues ConfigureConnectionSettings(TSearchSettings searchSettings, string indexName)
+        {
+            var singleNodeConnectionPool = new SingleNodeConnectionPool(new Uri(searchSettings.Host));
+            var connection = new ConnectionSettings(singleNodeConnectionPool);
+
+            if (searchSettings.GetAdditionalData<bool>(UmbElasticsearchConstants.Configuration.EnableDebugMode))
+            {
+                connection.EnableDebugMode(apiCallDetails =>
+                {
+                    LogHelper.Debug<SearchApplicationEventHandler<TSearchSettings>>(apiCallDetails.DebugInformation);
+                    Debug.WriteLine(apiCallDetails.DebugInformation);
+                });
+            }
+
+            connection.DefaultIndex(indexName);
+
+            ModifyConnectionSettings(connection, searchSettings, indexName);
+            return connection;
+        }
+
+        protected virtual void ModifyConnectionSettings(ConnectionSettings connectionSettings, TSearchSettings searchSettings, string indexName)
+        {
+        }
+
+        protected virtual IElasticClient ConfigureElasticClient(IConnectionSettingsValues connection, TSearchSettings searchSettings, string indexName)
+        {
             return new ElasticClient(connection);
         }
 
-        protected abstract IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client);
+        protected abstract IElasticsearchIndexCreationStrategy GetIndexCreationStrategy(IElasticClient client, ISearchIndexNameResolver indexNameResolver);
     }
 }

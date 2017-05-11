@@ -5,16 +5,18 @@ namespace Umbraco.Elasticsearch.Samplev75.Features.Search.Queries
 {
     public class UmbracoDocument : IUmbracoDocument
     {
-        [ElasticProperty(Index = FieldIndexOption.NotAnalyzed)]
+        [Keyword]
         public string Id { get; set; }
 
-        [ElasticProperty(Analyzer = "indexify_english")]
+        // [ElasticProperty(Analyzer = "indexify_english")]
+        [Text]
         public string Title { get; set; }
 
-        [ElasticProperty(Analyzer = "indexify_english")]
+        // [ElasticProperty(Analyzer = "indexify_english")]
+        [Text]
         public string Summary { get; set; }
 
-        [ElasticProperty(Index = FieldIndexOption.NotAnalyzed)]
+        [Keyword]
         public string Url { get; set; }
     }
 }

@@ -7,7 +7,7 @@ namespace Umbraco.Elasticsearch.Core.Media.Impl
     {
         public void Build(string indexName)
         {
-            var indexExists = UmbracoSearchFactory.Client.IndexExists(i => i.Index(indexName))?.Exists ?? false;
+            var indexExists = UmbracoSearchFactory.Client.IndexExists(indexName)?.Exists ?? false;
             if (!indexExists) throw new InvalidOperationException($"'{indexName}' not available, please ensure you have created an index with this name");
             using (BusyStateManager.Start($"Building media for {indexName}", indexName))
             {

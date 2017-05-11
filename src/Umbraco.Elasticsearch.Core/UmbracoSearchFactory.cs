@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Nest;
-using Nest.Indexify;
+using Newtonsoft.Json.Linq;
 using Umbraco.Core.Logging;
 using Umbraco.Core.Models;
 using Umbraco.Elasticsearch.Core.Config;
 using Umbraco.Elasticsearch.Core.Content;
+using Umbraco.Elasticsearch.Core.Impl;
 using Umbraco.Elasticsearch.Core.Media;
 using Umbraco.Elasticsearch.Core.Utils;
 
@@ -17,12 +18,12 @@ namespace Umbraco.Elasticsearch.Core
 {
     public static class UmbracoSearchFactory
     {
-        private static IElasticClient _client;
+        private static IElasticClient client;
 
         private static readonly IDictionary<IContentIndexService, Func<IContent, bool>> ContentIndexServiceRegistry = new Dictionary<IContentIndexService, Func<IContent, bool>>();
         private static readonly IDictionary<IMediaIndexService, Func<IMedia, bool>> MediaIndexServiceRegistry = new Dictionary<IMediaIndexService, Func<IMedia, bool>>();
 
-        private static IElasticsearchIndexCreationStrategy _indexStrategy;
+        private static IElasticsearchIndexCreationStrategy indexStrategy;
 
         public static IEnumerable<IContentIndexService> GetContentIndexServices()
         {
@@ -36,7 +37,7 @@ namespace Umbraco.Elasticsearch.Core
 
         public static void RegisterIndexStrategy(IElasticsearchIndexCreationStrategy strategy)
         {
-            _indexStrategy = strategy;
+            indexStrategy = strategy;
             LogHelper.Info<IElasticsearchIndexCreationStrategy>($"Registered index strategy [{strategy.GetType().Name}]");
         }
 
@@ -68,7 +69,7 @@ namespace Umbraco.Elasticsearch.Core
 
         public static IElasticsearchIndexCreationStrategy GetIndexStrategy()
         {
-            return _indexStrategy;
+            return indexStrategy;
         }
 
         public static IMediaIndexService GetMediaIndexService(IMedia media)
@@ -85,7 +86,7 @@ namespace Umbraco.Elasticsearch.Core
         {
             return MediaIndexServiceRegistry?.Keys.FirstOrDefault(x => x.DocumentTypeName.Equals(documentTypeName, StringComparison.OrdinalIgnoreCase));
         }
-
+        
         public static IContentIndexService GetContentIndexService(IContent content)
         {
             return ContentIndexServiceRegistry?.FirstOrDefault(x => x.Value(content)).Key;
@@ -104,19 +105,19 @@ namespace Umbraco.Elasticsearch.Core
         {
             get
             {
-                if (_client == null) throw new InvalidOperationException("Elasticsearch client is not available, verify configuration settings");
-                return _client;
+                if (client == null) throw new InvalidOperationException("Elasticsearch client is not available, verify configuration settings");
+                return client;
             }
         }
         
         public static void SetDefaultClient(IElasticClient client)
         {
-            _client = client;
+            UmbracoSearchFactory.client = client;
         }
 
         public static async Task<bool> IsActiveAsync()
         {
-            var response = await _client.PingAsync();
+            var response = await client.PingAsync();
             return response?.IsValid ?? false;
         }
 
@@ -127,7 +128,13 @@ namespace Umbraco.Elasticsearch.Core
             return new PluginVersionInfo(pluginVersion,umbracoVersion);
         }
 
-        public static string ActiveIndexName => _client.Infer.DefaultIndex;
+        public static string ActiveIndexName => client.ConnectionSettings.DefaultIndex;
         public static bool HasActiveIndex { get; set; } = false;
+
+        public static async Task<Version> GetElasticsearchVersionAsync()
+        {
+            var result = await client.RootNodeInfoAsync(n => n.ErrorTrace());
+            return Version.Parse(result.Version.Number);
+        }
     }
 }
