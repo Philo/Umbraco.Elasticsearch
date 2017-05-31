@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using Elasticsearch.Net;
 using Nest;
 using Umbraco.Core.Logging;
@@ -12,6 +13,12 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
     public abstract partial class SearchApplicationEventHandler<TSearchSettings>
         where TSearchSettings : ISearchSettings
     {
+        private static bool HasActiveIndex()
+        {
+            var response = UmbracoSearchFactory.Client.IndexExists(UmbracoSearchFactory.ActiveIndexName);
+            return response.Exists;
+        }
+
         private void Initialise(TSearchSettings searchSettings)
         {
             try
@@ -23,6 +30,8 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
 
                 UmbracoSearchFactory.SetDefaultClient(client);
                 UmbracoSearchFactory.RegisterIndexStrategy(indexStrategy);
+
+                UmbracoSearchFactory.HasActiveIndex = HasActiveIndex();
             }
             catch (Exception ex)
             {

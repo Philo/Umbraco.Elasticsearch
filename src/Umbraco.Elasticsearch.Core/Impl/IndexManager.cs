@@ -59,7 +59,6 @@ namespace Umbraco.Elasticsearch.Core.Impl
 
         public async Task<IEnumerable<IndexStatusInfo>> IndicesInfo()
         {
-            // TODO : validate usage and response here
             var indexAliasName = UmbracoSearchFactory.ActiveIndexName;
             var response = await client.IndicesStatsAsync($"{indexAliasName}-*");
             var indexInfo = response.Indices.Where(x => x.Key.StartsWith($"{indexAliasName}-")).Select(x => new IndexStatusInfo
@@ -70,7 +69,7 @@ namespace Umbraco.Elasticsearch.Core.Impl
                 SizeInBytes = x.Value.Total.Store.SizeInBytes,
                 Status = GetStatus(x.Key)
             }).ToList();
-            UmbracoSearchFactory.HasActiveIndex = indexInfo.Any(x => x.Status == IndexStatusOption.Active);
+            // UmbracoSearchFactory.HasActiveIndex = indexInfo.Any(x => x.Status == IndexStatusOption.Active);
             return indexInfo;
         }
 
