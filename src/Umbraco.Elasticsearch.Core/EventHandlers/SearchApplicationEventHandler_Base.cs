@@ -93,7 +93,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                         if (sender.TreeAlias == Constants.Trees.Content)
                         {
                             var node = sender.Umbraco.TypedContent(nodeId);
-                            var contentService = UmbracoSearchFactory.GetContentIndexService(node.DocumentTypeAlias);
+                            var contentService = UmbracoSearchFactory.GetContentIndexService(node?.DocumentTypeAlias);
                             if (contentService != null)
                             {
                                 var item = new MenuItem("umbElasticsearch.reindex", "Re-Index")
@@ -108,7 +108,7 @@ namespace Umbraco.Elasticsearch.Core.EventHandlers
                         else if (sender.TreeAlias == Constants.Trees.Media)
                         {
                             var node = sender.Umbraco.TypedMedia(nodeId);
-                            var mediaService = UmbracoSearchFactory.GetMediaIndexService(node.DocumentTypeAlias);
+                            var mediaService = UmbracoSearchFactory.GetMediaIndexService(node?.DocumentTypeAlias);
                             if (mediaService != null)
                             {
                                 var item = new MenuItem("umbElasticsearch.reindex", "Re-Index")
