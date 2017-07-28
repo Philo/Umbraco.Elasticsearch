@@ -1,5 +1,5 @@
 # Umbraco.Elasticsearch
-Integration of Elasticsearch (v1 only) as a search platform for Umbraco v7.3+
+Integration of Elasticsearch (v5 only) as a search platform for Umbraco v7.5+
 
 [![Build status](https://ci.appveyor.com/api/projects/status/y7trnlo257kgy9rl/branch/master?svg=true)](https://ci.appveyor.com/project/Philo/umbraco-elasticsearch/branch/master)
 
